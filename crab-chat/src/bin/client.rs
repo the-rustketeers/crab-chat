@@ -1,4 +1,5 @@
-use std::{env::args, io::Read, iter::Iterator, net::TcpStream, process, str};
+use crab_chat::*;
+use std::{env::args, iter::Iterator, net::TcpStream, process};
 
 fn main() {
     let cmd_args: Vec<String> = args().collect();
@@ -15,9 +16,11 @@ fn main() {
         eprintln!("Error: {e}.");
         process::exit(1);
     });
-    print_word_packets(connection);
+    connection_loop(connection);
 }
 
-fn print_word_packets(mut stream: TcpStream) {
+fn connection_loop(mut stream: TcpStream) {
+    let obj = receive_json_packet(&mut stream);
+    println!("{:#?}", obj);
     loop {}
 }

@@ -1,6 +1,7 @@
+use crab_chat::*;
+use json::object;
 use std::{
     env,
-    io::{Read, Write},
     iter::Iterator,
     net::{TcpListener, TcpStream},
     process,
@@ -43,7 +44,7 @@ fn main() {
         match stream {
             Ok(mut s) => {
                 println!("INFO: Got a connection from {:?}", s.peer_addr().unwrap());
-                send_words(&mut s);
+                connection_loop(&mut s);
             }
             Err(why) => {
                 eprintln!("ERROR: {why}");
@@ -53,17 +54,10 @@ fn main() {
     }
 }
 
-/**
- * Description: sends 1 to 10 random word packets to a client.
- *              each word packet has two parts:
- *                  the length of the string, a u16 in big endian (network) byte order
- *                  the ASCII characters, a sequence of bytes
- */
-fn send_words(s: &mut TcpStream) {
-    s.write_all("Please choose a nickname: ".as_bytes())
-        .unwrap();
-
-    let mut name = String::new();
-    s.read_to_string(&mut name).unwrap();
-    println!("{}", name);
+fn connection_loop(s: &mut TcpStream) {
+    let name_prompt = object! {
+        message: "Please input a nickname: "
+    };
+    println!("{:#?}", name_prompt.dump());
+    send_json_packet(s, name_prompt);
 }

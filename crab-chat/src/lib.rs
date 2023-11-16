@@ -9,7 +9,7 @@ use json::JsonValue;
 /**
  * Sends a json object through the TcpStream, by first creating the object, sending its size, and then the object.
  */
-fn send_json_packet(s: &mut TcpStream, obj: JsonValue) {
+pub fn send_json_packet(s: &mut TcpStream, obj: JsonValue) {
     let strung = obj.dump();
     let pack_size = strung.len();
 
@@ -20,7 +20,7 @@ fn send_json_packet(s: &mut TcpStream, obj: JsonValue) {
 /**
  * Receives a packet through the TcpStream, by first reading the size of the json packet, then reading the packet, then finally parsing the json packet.
  */
-fn receive_json_packet(s: &mut TcpStream) -> JsonValue {
+pub fn receive_json_packet(s: &mut TcpStream) -> JsonValue {
     let mut packet_size_buf: [u8; 2] = [0; 2];
     s.read_exact(&mut packet_size_buf).unwrap();
 
