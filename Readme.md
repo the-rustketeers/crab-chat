@@ -1,4 +1,4 @@
-# crab-chat
+# Crab-chat
 
 ## How to run Client and Server
 
