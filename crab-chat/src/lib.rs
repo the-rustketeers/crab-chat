@@ -1,10 +1,11 @@
+use json::JsonValue;
 use std::{
     io::{Read, Write},
     net::TcpStream,
     str,
 };
 
-use json::JsonValue;
+pub const ADDRESS: &str = "127.0.0.1:13579";
 
 /**
  * Sends a json object through the TcpStream, by first creating the object, sending its size, and then the object.
