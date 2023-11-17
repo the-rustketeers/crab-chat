@@ -21,15 +21,16 @@ pub fn send_json_packet(s: &mut TcpStream, obj: JsonValue) {
  * Receives a packet through the TcpStream, by first reading the size of the json packet, then reading the packet, then finally parsing the json packet.
  */
 pub fn receive_json_packet(s: &mut TcpStream) -> JsonValue {
-    let mut packet_size_buf: [u8; 2] = [0; 2];
+    let mut packet_size_buf: [u8; 8] = [0; 8];
     s.read_exact(&mut packet_size_buf).unwrap();
 
-    let packet_size: u16 = u16::from_be_bytes(packet_size_buf);
+    let packet_size: usize = usize::from_be_bytes(packet_size_buf);
 
     let mut packet_buf: Vec<u8> = vec![0; usize::from(packet_size)];
 
     s.read_exact(&mut packet_buf).unwrap();
     let packet: &str = str::from_utf8(&packet_buf).unwrap();
+    println!("Packet: {}", packet);
 
     json::parse(packet).unwrap()
 }
