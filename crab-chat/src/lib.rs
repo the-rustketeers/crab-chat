@@ -12,6 +12,7 @@ pub const ADDRESS: &str = "127.0.0.1:13579";
  */
 pub fn send_json_packet(s: &mut TcpStream, obj: JsonValue) {
     let strung = obj.dump();
+    println!("Sent Packet: {}", strung);
     let pack_size = strung.len();
 
     s.write_all(&pack_size.to_be_bytes()).unwrap();
@@ -31,7 +32,7 @@ pub fn receive_json_packet(s: &mut TcpStream) -> JsonValue {
 
     s.read_exact(&mut packet_buf).unwrap();
     let packet: &str = str::from_utf8(&packet_buf).unwrap();
-    println!("Packet: {}", packet);
+    println!("Received Packet: {}", packet);
 
     json::parse(packet).unwrap()
 }

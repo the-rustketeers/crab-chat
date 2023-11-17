@@ -11,5 +11,5 @@ fn main() {
 
 fn connection_loop(mut stream: TcpStream) {
     let obj = lib::receive_json_packet(&mut stream);
-    println!("{:#?}", obj);
+    println!("{}: {}", obj["author"], obj["message"]);
 }

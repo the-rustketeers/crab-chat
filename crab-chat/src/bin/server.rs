@@ -38,9 +38,10 @@ fn main() {
 }
 
 fn connection_loop(s: &mut TcpStream) {
-    let name_prompt = object! {
-        message: "Please input a nickname: "
+    let obj = object! {
+        message: "This is an example message.",
+        author: "J. Posh",
     };
-    println!("{:#?}", name_prompt.dump());
-    lib::send_json_packet(s, name_prompt);
+
+    lib::send_json_packet(s, obj);
 }
