@@ -1,9 +1,6 @@
 use crab_chat as lib;
-use json::object;
-use std::{
-    net::{TcpListener, TcpStream},
-    process,
-};
+
+use std::{net::TcpListener, process, thread};
 
 const ERR: i32 = -1;
 
@@ -25,9 +22,11 @@ fn main() {
 
     for stream in listener.incoming() {
         match stream {
-            Ok(mut s) => {
-                println!("INFO: Got a connection from {:?}", s.peer_addr().unwrap());
-                connection_loop(&mut s);
+            Ok(stream) => {
+                println!("[CONNECTION FROM {:?}]", stream.peer_addr().unwrap());
+                thread::spawn(|| {
+                    lib::connection_loop(stream);
+                });
             }
             Err(why) => {
                 eprintln!("ERROR: {why}");
@@ -35,13 +34,4 @@ fn main() {
             }
         }
     }
-}
-
-fn connection_loop(s: &mut TcpStream) {
-    let obj = object! {
-        message: "This is an example message.",
-        author: "J. Posh",
-    };
-
-    lib::send_json_packet(s, obj);
 }

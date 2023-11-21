@@ -6,10 +6,5 @@ fn main() {
         eprintln!("Error: {e}.");
         process::exit(1);
     });
-    connection_loop(connection);
-}
-
-fn connection_loop(mut stream: TcpStream) {
-    let obj = lib::receive_json_packet(&mut stream);
-    println!("{}: {}", obj["author"], obj["message"]);
+    lib::connection_loop(connection);
 }
