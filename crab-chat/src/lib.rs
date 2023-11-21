@@ -40,10 +40,8 @@ pub fn receive_json_packet(s: &mut TcpStream) -> JsonValue {
     json::parse(packet).unwrap()
 }
 
-
 /* CODE BELOW IS FROM RUST DOCS!
-I wanted to just toss in the direct thread management and implementation they added.
-Seems to work, although may not be optimal. 
+I wanted to just toss in the direct thread management and implementation they added. Seems to work, although may not be optimal.
  */
 pub struct ThreadPool {
     workers: Vec<Worker>,

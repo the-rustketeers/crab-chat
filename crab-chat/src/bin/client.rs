@@ -1,11 +1,7 @@
 // CHANGES MADE FOR TESTING PURPOSES ONLY!
 
 use crab_chat as lib;
-use json::JsonValue;        // NOTE: This could be just for me because of my IDE, but this is labelled as "Unused"..?
-use std::{net::TcpStream, 
-    process, 
-    time,
-};
+use std::{net::TcpStream, process, time};
 
 fn main() {
     let mut connection: TcpStream = TcpStream::connect(lib::ADDRESS).unwrap_or_else(|e| {
