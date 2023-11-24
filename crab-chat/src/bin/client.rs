@@ -12,11 +12,12 @@ fn main() {
     let mut stream_sender = connection.try_clone().unwrap();
     let mut stream_reader = connection.try_clone().unwrap();
 
-    thread::spawn(move || loop {
+    thread::spawn(move || loop { // Spawns thread to read in received information
         let n_s: String = rec_loop(&mut stream_reader);
         println!("{}", n_s);
     });
-    loop {
+
+    loop { // Loops main to send and get use input
         let mut msg = String::new();
         
         io::stdin()

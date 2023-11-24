@@ -46,17 +46,17 @@ fn main() {
                 // This is why stream is cloned for read purposes. Both streams identical.
 
                 let thread_rx = rx.clone();
-                let mut send_string: String;
+                let mut send_string: String;                    // Two declared strings to be used for the reading.
                 let mut prev_string: String = "".to_string();
 
                 tpool.execute(move || {
 
                     loop {
-                        std::thread::sleep(time::Duration::from_millis(100));
-                        match thread_rx.try_recv() {
-                            Ok(send_string) => {
-                                if (send_string == prev_string) {
-                                    println!("Same string!");
+                        std::thread::sleep(time::Duration::from_millis(100)); // Loops through indefinitely; an attempt to read from channel across multiple threads.
+                        match thread_rx.try_recv() {                              // This match case may not be entirely useful yet, I'm not sure.
+                            Ok(send_string) => {                          // Right now the main issue is getting the information from the out-end of the channel
+                                if (send_string == prev_string) {                 // to be read from every thread. The information stays there, but I'm done trying to
+                                    println!("Same string!");                     // figure out how to force it to read it. For now.
                                     continue;
                                 }
                                 if (send_string != prev_string) {
@@ -79,7 +79,7 @@ fn main() {
                     }
                 });
                 
-                let thread_tx = tx.clone();
+                let thread_tx = tx.clone(); // Channel clone, for the move in thread
 
                 tpool.execute(move || {
 
