@@ -45,6 +45,8 @@ fn main() {
                 // stream is now OWNED by thread and will terminate after scope is lost. (End of thread execution)
                 // This is why stream is cloned for read purposes. Both streams identical.
 
+
+                let thread_tx2 = tx.clone();
                 let thread_rx = rx.clone();
                 let mut send_string: String;                    // Two declared strings to be used for the reading.
                 let mut prev_string: String = "".to_string();
@@ -53,15 +55,16 @@ fn main() {
 
                     loop {
                         std::thread::sleep(time::Duration::from_millis(100)); // Loops through indefinitely; an attempt to read from channel across multiple threads.
-                        match thread_rx.try_recv() {                              // This match case may not be entirely useful yet, I'm not sure.
+                        match thread_rx.recv() {                              // This match case may not be entirely useful yet, I'm not sure.
                             Ok(send_string) => {                          // Right now the main issue is getting the information from the out-end of the channel
-                                if (send_string == prev_string) {                 // to be read from every thread. The information stays there, but I'm done trying to
+                                if (send_string == prev_string) {                 // to be read from every thread. The information DOES NOT stay there, and I'm done trying to
                                     println!("Same string!");                     // figure out how to force it to read it. For now.
                                     continue;
                                 }
                                 if (send_string != prev_string) {
-                                     connection_loop(&mut sendstream, &send_string);
-                                    prev_string = send_string;
+                                    connection_loop(&mut sendstream, &send_string);
+                                    prev_string = send_string.clone();
+                                    thread_tx2.send(send_string).unwrap();
                                 }
                             },
                             Err(_) => {
