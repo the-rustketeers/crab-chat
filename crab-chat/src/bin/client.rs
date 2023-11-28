@@ -1,10 +1,9 @@
 // CHANGES MADE FOR TESTING PURPOSES ONLY!
 use crab_chat as lib;
-use std::{net::TcpStream, process, time, io, thread,};
+use std::{io, net::TcpStream, process, thread};
 
 fn main() {
-    
-    let mut connection: TcpStream = TcpStream::connect(lib::ADDRESS).unwrap_or_else(|e| {
+    let connection: TcpStream = TcpStream::connect(lib::ADDRESS).unwrap_or_else(|e| {
         eprintln!("Error: {e}.");
         process::exit(1);
     });
@@ -12,14 +11,16 @@ fn main() {
     let mut stream_sender = connection.try_clone().unwrap();
     let mut stream_reader = connection.try_clone().unwrap();
 
-    thread::spawn(move || loop { // Spawns thread to read in received information
+    thread::spawn(move || loop {
+        // Spawns thread to read in received information
         let n_s: String = rec_loop(&mut stream_reader);
         println!("{}", n_s);
     });
 
-    loop { // Loops main to send and get use input
+    loop {
+        // Loops main to send and get use input
         let mut msg = String::new();
-        
+
         io::stdin()
             .read_line(&mut msg)
             .expect("Failed to read input");
@@ -32,7 +33,7 @@ fn main() {
         };
 
         send_loop(&mut stream_sender, msg.to_string());
-    };
+    }
 }
 
 /// FOR COMMIT: modified to print packet message literal for ease of development (personally helps me only, I understand it isn't practical)
