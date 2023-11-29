@@ -121,7 +121,7 @@ fn fetch_loop(json_consumer: Receiver<JsonValue>, stream_consumer: Receiver<TcpS
 
         // see if a json packet is available, if so forward it to clients
         match json_consumer.try_recv() {
-            Ok(obj) => push_to_clients(&mut client_list, obj),
+            Ok(obj) => client_list = push_to_clients(&mut client_list, obj),
             Err(why) => match why {
                 TryRecvError::Disconnected => {
                     eprint!("[FATAL ERROR: {why}]");
@@ -137,13 +137,13 @@ fn fetch_loop(json_consumer: Receiver<JsonValue>, stream_consumer: Receiver<TcpS
  * This function just loops through all clients in the client list and attempts
  * to send a json packet to them.
  */
-fn push_to_clients(client_list: &mut Vec<TcpStream>, obj: JsonValue) {
+fn push_to_clients(client_list: &mut Vec<TcpStream>, obj: JsonValue) -> Vec<TcpStream> {
+    let mut new_list: Vec<TcpStream> = vec![];
     for i in 0..client_list.len() {
         match lib::send_json_packet(&mut client_list[i], obj.clone()) {
-            Ok(()) => (),
-            // need to implement this,
-            // vvv just a little more complicated that I thought
-            Err(_) => (),
+            Ok(()) => new_list.push(client_list[i].try_clone().unwrap()), // Appends to new list if stream = no error. List is then returned.
+            Err(_) => (), // println!("[{:?} HAS BEEN REMOVED FROM THE LIST OF ACTIVE CLIENTS]", client_list[i].peer_addr().unwrap()), // Not needed, helped to make sure
         }
     }
+    new_list // returned list
 }
