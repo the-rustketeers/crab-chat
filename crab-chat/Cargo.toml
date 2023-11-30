@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 chrono = { version = "0.4.31", features = ["unstable-locales"] }
 json = "0.12.4"
+colored = "2.0.4"
