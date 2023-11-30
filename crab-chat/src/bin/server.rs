@@ -1,6 +1,7 @@
 use crab_chat as lib;
 use json::JsonValue;
 
+use core::time;
 use std::{
     net::{TcpListener, TcpStream},
     process,
@@ -130,6 +131,9 @@ fn fetch_loop(json_consumer: Receiver<JsonValue>, stream_consumer: Receiver<TcpS
                 TryRecvError::Empty => (),
             },
         };
+
+        // limit frequency of fetch function so CPU isn't being wasted
+        thread::sleep(time::Duration::from_millis(10));
     }
 }
 
