@@ -45,6 +45,46 @@ fn main() {
         eprintln!("Error: {e}.");
         process::exit(1);
     });
+
+    let mut nick_change: String = String::new();
+    let nick_connection = &mut connection.try_clone().unwrap();
+    let mut nick_obj = object! {
+        author: user_info[0].clone(),
+        kind: "nick",
+    };
+
+    loop {
+        match lib::send_json_packet(nick_connection, nick_obj.clone()) {
+            Ok(()) => (),
+            Err(_) => {
+                println!("Error sending nickname request...");
+                process::exit(0);
+            },
+        };
+
+        let rec = match lib::receive_json_packet(nick_connection) {
+            Ok(obj) => obj,
+            Err(_) => break,
+        };
+
+        if rec["kind"] == "retry" {
+            println!("Nickname unavailable. Try again:");
+            io::stdin()
+                .read_line(&mut nick_change)
+                .expect("Could not read user input");
+            
+            let trimmer = nick_change.clone();
+            let trimmed = trimmer.trim();
+
+            nick_obj["author"] = json::JsonValue::String(trimmed.to_string());
+            continue;
+        } else {
+            println!("Nickname accepted. Start chatting!");
+            break;
+        }
+
+    }
+
     connection_loop(connection, user_info);
 }
 
@@ -99,7 +139,17 @@ fn connection_loop(stream: TcpStream, user: Vec<String>) {
             Ok(obj) => obj,
             Err(_) => break,
         };
-        let clrval: Vec<&str> = obj["color"].as_str().unwrap().split(" ").collect(); // clrval[0] is R, clrval[1] is G, clrval[2] is B.
+        let mut clrval: Vec<&str> = vec![];
+        if !obj["color"].is_null() { 
+            clrval = obj["color"].as_str().unwrap().split(" ").collect(); // clrval[0] is R, clrval[1] is G, clrval[2] is B.
+        } else {
+            clrval.push("255");
+            clrval.push("255");
+            clrval.push("255");
+        }
+        if obj["message"].is_null() {
+            continue;
+        }
         println!(
             "{}: {} says:\n\t\"{}\"",
             obj["time"], obj["author"].to_string().truecolor(clrval[0].parse::<u8>().unwrap(), clrval[1].parse::<u8>().unwrap(), clrval[2].parse::<u8>().unwrap()), obj["message"]

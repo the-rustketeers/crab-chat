@@ -1,5 +1,5 @@
 use crab_chat as lib;
-use json::JsonValue;
+use json::{JsonValue, object};
 
 use std::{
     net::{TcpListener, TcpStream},
@@ -8,12 +8,19 @@ use std::{
     thread,
 };
 
+static mut NICKS: Vec<String> = vec![];
+
 const ERR: i32 = -1;
 
 /**
  * Main program. Hosts the Chat Server
  */
 fn main() {
+    unsafe {
+        let mut starter: Vec<String> = vec![];
+        starter.push("Starter_val".to_string());
+        NICKS = starter.clone();
+    }
     //set up TcpListener, bind to port, and listen for connections
     let listener: TcpListener = TcpListener::bind(lib::ADDRESS).unwrap_or_else(|why| {
         eprintln!("ERROR: {why}");
@@ -70,6 +77,8 @@ fn main() {
  * and will forward any messages it receives through the channel
  */
 fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValue>) {
+    let mut name_check = false;
+    let mut temp_nicks: Vec<String> = vec![];
     loop {
         let obj = match lib::receive_json_packet(&mut listener) {
             Ok(obj) => obj,
@@ -84,6 +93,25 @@ fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValu
                 listener.peer_addr().unwrap()
             );
             break;
+        }
+
+        if obj["kind"].to_string() == "nick" {
+            unsafe {
+                for item in NICKS.clone() {
+                    if (obj["author"].to_string() == item.to_string()) && name_check == false {
+                        lib::send_json_packet(&mut listener, object! {kind: "retry"}).unwrap();
+                        continue;
+                    } else {
+                        println!("{:?}", obj["author"].to_string().clone());
+                        temp_nicks.push(obj["author"].clone().to_string());
+                        name_check = true;
+                        NICKS = temp_nicks.clone();
+                        print!("{:?}", temp_nicks);
+                        lib::send_json_packet(&mut listener, object! {kind: "okay"}).unwrap();
+                        continue;
+                    }
+                }
+            }
         }
 
         match json_producer.send(obj) {
