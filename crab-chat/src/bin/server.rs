@@ -11,6 +11,20 @@ use std::{
 
 const ERR: i32 = -1;
 
+struct Client<'a> {
+    stream: TcpStream,
+    nickname: &'a str,
+}
+
+impl Client<'_> {
+    pub fn try_clone(&self) -> Client<'_> {
+        Client {
+            stream: self.stream.try_clone().unwrap(),
+            nickname: self.nickname.clone(),
+        }
+    }
+}
+
 /**
  * Main program. Hosts the Chat Server
  */
@@ -29,7 +43,7 @@ fn main() {
 
     // Set up mpsc channels to send to thread that handles pushing messages
     let (json_producer, json_consumer) = mpsc::channel::<JsonValue>();
-    let (stream_producer, stream_consumer) = mpsc::channel::<TcpStream>();
+    let (stream_producer, stream_consumer) = mpsc::channel::<Client>();
 
     // Spawns new thread that handles fetching messages and pushing messages
     let fetcher = thread::spawn(move || {
@@ -49,11 +63,15 @@ fn main() {
                 // Clone the producer, so it can forward messages to the fetcher
                 let p = json_producer.clone();
                 // Clone the stream, so the fetcher can send messages to it
-                stream_producer.send(stream.try_clone().unwrap()).unwrap();
+                let client = Client {
+                    stream: stream.try_clone().unwrap(),
+                    nickname: "temp",
+                };
+                stream_producer.send(client).unwrap();
 
                 // Spawn a new thread that handles listening to this connection
                 thread::spawn(move || {
-                    connection_loop(stream, p);
+                    connection_loop(client, p);
                 });
             }
             Err(why) => eprintln!("[ERROR: {why}]"),
@@ -70,9 +88,9 @@ fn main() {
  * This function takes a TcpStream and Producer part of a channel
  * and will forward any messages it receives through the channel
  */
-fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValue>) {
+fn connection_loop(mut client: Client, json_producer: mpsc::Sender<JsonValue>) {
     loop {
-        let obj = match lib::receive_json_packet(&mut listener) {
+        let obj = match lib::receive_json_packet(&mut client.stream) {
             Ok(obj) => obj,
             Err(lib::JsonError::ConnectionAborted) => break,
         };
@@ -82,7 +100,7 @@ fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValu
         if obj["kind"] == "disconnection" {
             println!(
                 "[{:?} DISCONNECTED FROM THE SERVER]",
-                listener.peer_addr().unwrap()
+                client.stream.peer_addr().unwrap()
             );
             break;
         }
@@ -101,16 +119,16 @@ fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValu
  * Takes any messages that the json consumer gets and forwards it to all client
  * streams currently seen as connected
  */
-fn fetch_loop(json_consumer: Receiver<JsonValue>, stream_consumer: Receiver<TcpStream>) {
+fn fetch_loop(json_consumer: Receiver<JsonValue>, client_consumer: Receiver<Client>) {
     // This holds all of the client streams to try to send to
     // As more clients connect this grows and shrinks
-    let mut client_list: Vec<TcpStream> = vec![];
+    let mut client_list: Vec<Client> = vec![];
 
     // this loop handles probing for new client streams, new json packets sent
     loop {
         // see if a client stream is available, if so add it to list
-        match stream_consumer.try_recv() {
-            Ok(stream) => client_list.push(stream),
+        match client_consumer.try_recv() {
+            Ok(client) => client_list.push(client),
             Err(why) => match why {
                 TryRecvError::Disconnected => {
                     eprint!("[FATAL ERROR: {why}]");
@@ -141,11 +159,12 @@ fn fetch_loop(json_consumer: Receiver<JsonValue>, stream_consumer: Receiver<TcpS
  * This function just loops through all clients in the client list and attempts
  * to send a json packet to them.
  */
-fn push_to_clients(client_list: &mut Vec<TcpStream>, obj: JsonValue) -> Vec<TcpStream> {
-    let mut new_list: Vec<TcpStream> = vec![];
+fn push_to_clients<'a>(client_list: &'a mut Vec<Client<'a>>, obj: JsonValue) -> Vec<Client<'a>> {
+    let mut new_list: Vec<Client> = vec![];
     for i in 0..client_list.len() {
-        match lib::send_json_packet(&mut client_list[i], obj.clone()) {
-            Ok(()) => new_list.push(client_list[i].try_clone().unwrap()), // Appends to new list if stream = no error. List is then returned.
+        let client = client_list[i].try_clone();
+        match lib::send_json_packet(&mut client_list[i].stream, obj.clone()) {
+            Ok(()) => new_list.push(client), // Appends to new list if stream = no error. List is then returned.
             Err(_) => (), // println!("[{:?} HAS BEEN REMOVED FROM THE LIST OF ACTIVE CLIENTS]", client_list[i].peer_addr().unwrap()), // Not needed, helped to make sure
         }
     }

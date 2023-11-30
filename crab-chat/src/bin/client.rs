@@ -12,6 +12,18 @@ fn main() {
 }
 
 fn connection_loop(stream: TcpStream) {
+    println!("What would you like your nickname to be? ");
+    let mut nick = String::new();
+    io::stdin()
+        .read_line(&mut nick)
+        .expect("Failed to read line");
+
+    println!("What would you like your name color to be? ");
+    let mut color_preference = String::new();
+    io::stdin()
+        .read_line(&mut color_preference)
+        .expect("Failed to read line");
+
     println!("[START TYPING AND HIT ENTER TO SEND A MESSAGE]");
     let addr = stream.local_addr().unwrap();
 
@@ -26,6 +38,8 @@ fn connection_loop(stream: TcpStream) {
             .expect("Failed to read line");
 
         let msg = msg.trim();
+        let nick = nick.trim();
+        let color_preference = color_preference.trim();
 
         // check if input is to exit, and leave the thread if so
         if msg == lib::EXIT_CODE {
@@ -36,12 +50,14 @@ fn connection_loop(stream: TcpStream) {
             break;
         };
 
-        let local = Local::now().format("%H:%M:%S").to_string();
+        let local = Local::now().format("%H:%M").to_string();
 
         // wrap message in a json object
         // currently, all authors are just the address of connection
         let obj = object! {
-            author: format!("{addr}"),
+            author: nick,
+            color: color_preference,
+            address: format!("{addr}"),
             time: local,
             message: msg,
         };
@@ -63,7 +79,7 @@ fn connection_loop(stream: TcpStream) {
             Err(_) => break,
         };
         println!(
-            "{}: {} says:\n\t\"{}\"",
+            "{} | {}:\t\"{}\"",
             obj["time"], obj["author"], obj["message"]
         );
     });
