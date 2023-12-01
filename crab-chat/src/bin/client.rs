@@ -2,9 +2,15 @@ use chrono::Local;
 use crab_chat as lib;
 use json::object;
 use colored::Colorize;
-use std::{io, net::TcpStream, process, thread};
+use std::{time::Duration, io, net::TcpStream, process, thread};
 
 fn main() {
+
+    let connection: TcpStream = TcpStream::connect(lib::ADDRESS).unwrap_or_else(|e| {
+        eprintln!("Error: {e}.");
+        process::exit(1);
+    });
+
     let mut user_info: Vec<String> = vec![]; // Vector that contains user information. [0] is name, [1], [2], and [3] are R, G, and B, respectively for name color
     let mut user_input: String = String::new();
 
@@ -25,8 +31,18 @@ fn main() {
 
     let mut iter: i8 = 0;
     for val in temp {
+
+        let num_test = val.trim().parse::<i16>();
+        match num_test {
+            Ok(_) => (),
+            Err(_) => {
+                eprintln!("Please input proper values when signing in. Shutting down...");
+                process::exit(0);
+            },
+        }
+
         if(val.trim().parse::<i16>().unwrap() > 255) || (val.trim().parse::<i16>().unwrap() < 0) {
-            println!("Please input proper values when signing in. Shutting down...");
+            eprintln!("Please input proper values when signing in. Shutting down...");
             process::exit(0);
         }
         user_info.push(val.trim().to_string());
@@ -40,11 +56,10 @@ fn main() {
         process::exit(0);
     }
 
-
-    let connection: TcpStream = TcpStream::connect(lib::ADDRESS).unwrap_or_else(|e| {
+    /*let connection: TcpStream = TcpStream::connect(lib::ADDRESS).unwrap_or_else(|e| {
         eprintln!("Error: {e}.");
         process::exit(1);
-    });
+    });*/
 
     let mut nick_change: String = user_info[0].clone();
     let nick_connection = &mut connection.try_clone().unwrap();
@@ -85,7 +100,19 @@ fn main() {
             break;
         }
     }
-    connection_loop(connection, user_info);
+
+    let mut handler_connection = connection.try_clone().unwrap();
+    let handler_copy = user_info.clone();
+
+    ctrlc::set_handler(move || {
+        println!("Received Ctrl+C!");
+        lib::send_json_packet(&mut handler_connection, object! {kind: "disconnection", author: handler_copy[0].to_string()}).unwrap();
+        println!("[GOODBYE]");
+        process::exit(0);
+    })
+    .expect("Error setting Ctrl-C handler.");
+
+    connection_loop(connection, user_info.clone());
 }
 
 fn connection_loop(stream: TcpStream, user: Vec<String>) {
@@ -146,6 +173,9 @@ fn connection_loop(stream: TcpStream, user: Vec<String>) {
             clrval.push("255");
             clrval.push("255");
             clrval.push("255");
+        }
+        if obj["kind"] == "server_shutdown" {
+            thread::sleep(Duration::from_millis(10000));
         }
         if obj["message"].is_null() {
             continue;

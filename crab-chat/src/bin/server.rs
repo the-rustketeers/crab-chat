@@ -1,6 +1,7 @@
 use crab_chat as lib;
 use json::{JsonValue, object};
 use std::{
+    time::Duration,
     net::{TcpListener, TcpStream},
     process,
     sync::mpsc::{self, Receiver, TryRecvError},
@@ -16,14 +17,26 @@ const ERR: i32 = -1;
  */
 fn main() {
 
+    let (json_producer, json_consumer) = mpsc::channel::<JsonValue>();
+    let (stream_producer, stream_consumer) = mpsc::channel::<TcpStream>();
+
+    let handler_producer = json_producer.clone();
+
     ctrlc::set_handler(move || {
         println!("Received Ctrl+C!");
+        match handler_producer.send(object! {kind: "server_shutdown", author: "SERVER_HOST", color: "255 255 255"}) {
+            Ok(()) => (),
+            Err(why) => {
+                eprintln!("ERROR: {why}");
+            }
+        }
         match fs::remove_file("active_nicks.log") {
             Ok(()) => (),
             Err(why) => {
                 println!("Unable to remove active_nicks.log: {}", why);
             },
         }
+        thread::sleep(Duration::from_millis(10000));
         process::exit(0);
     })
     .expect("Error setting Ctrl-C handler.");
@@ -41,8 +54,8 @@ fn main() {
     );
 
     // Set up mpsc channels to send to thread that handles pushing messages
-    let (json_producer, json_consumer) = mpsc::channel::<JsonValue>();
-    let (stream_producer, stream_consumer) = mpsc::channel::<TcpStream>();
+    //let (json_producer, json_consumer) = mpsc::channel::<JsonValue>();
+    //let (stream_producer, stream_consumer) = mpsc::channel::<TcpStream>();
 
     // Spawns new thread that handles fetching messages and pushing messages
     let fetcher = thread::spawn(move || {
@@ -69,7 +82,7 @@ fn main() {
                     connection_loop(stream, p);
                 });
             }
-            Err(why) => eprintln!("[ERROR: {why}]"),
+            Err(/*why*/_) => (),//eprintln!("[ERROR: {why}]"), // This code is removed as it prints when handling Ctrl+C
         }
     }
 
@@ -95,7 +108,7 @@ fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValu
         lib::log_json_packet(&obj);
 
         if obj["kind"] == "disconnection" {
-            let mut nicks: Vec<String> = fs::read_to_string("active_nicks.log").expect("Failed to read active_nicks.log").split(" ").map(|s| s.to_string()).collect();
+            let mut nicks: Vec<String> = fs::read_to_string("active_nicks.log").expect("Failed to read active_nicks.log").split("£").map(|s| s.to_string()).collect();
             //let index = nicks.iter().position(|x| *x == obj["author"].to_string());
             //nicks.remove(index);
             nicks.retain(|x| *x != obj["author"].to_string());
@@ -107,11 +120,10 @@ fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValu
                 },
             }
             let mut file = OpenOptions::new().read(true).append(true).create(true).open("active_nicks.log").unwrap();
-            for index in nicks {
-                let mut name = index.to_string();
-                name.push_str(" ");
-                file.write_all(name.as_bytes()).expect("Write to active_nicks.log failed.");
-            }
+
+            file.write_all(nicks.join("£").as_bytes()).expect("Wite to active_nicks.log failed.");
+
+            drop(file); // drops file from scope, forcing flush
 
             println!(
                 "[{:?} DISCONNECTED FROM THE SERVER]",
@@ -122,7 +134,7 @@ fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValu
 
         if obj["kind"].to_string() == "nick" {
             let mut file = OpenOptions::new().read(true).append(true).create(true).open("active_nicks.log").unwrap();
-            let nicks: Vec<String> = fs::read_to_string("active_nicks.log").expect("Failed to read active_nicks.log").split(" ").map(|s| s.to_string()).collect();
+            let nicks: Vec<String> = fs::read_to_string("active_nicks.log").expect("Failed to read active_nicks.log").split("£").map(|s| s.to_string()).collect();
                 if nicks.iter().any(|e| e==obj["author"].as_str().unwrap()) {
                 lib::send_json_packet(&mut listener, object! {kind: "retry"}).unwrap();
                 println!("Retried!\n");
@@ -130,7 +142,7 @@ fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValu
                 continue;
             } else {
                 let mut name = obj["author"].to_string();
-                name.push_str(" ");
+                name.push_str("£");
                 file.write_all(name.as_bytes()).expect("Write to active_nicks.log failed.");
                 print!("\n{:?}\n", nicks);
                 lib::send_json_packet(&mut listener, object! {kind: "okay"}).unwrap();
@@ -182,6 +194,7 @@ fn fetch_loop(json_consumer: Receiver<JsonValue>, stream_consumer: Receiver<TcpS
                 TryRecvError::Empty => (),
             },
         };
+        thread::sleep(Duration::from_millis(10));
     }
 }
 
