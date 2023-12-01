@@ -46,7 +46,7 @@ fn main() {
         process::exit(1);
     });
 
-    let mut nick_change: String = String::new();
+    let mut nick_change: String = user_info[0].clone();
     let nick_connection = &mut connection.try_clone().unwrap();
     let mut nick_obj = object! {
         author: user_info[0].clone(),
@@ -68,6 +68,7 @@ fn main() {
         };
 
         if rec["kind"] == "retry" {
+            nick_change = String::new();
             println!("Nickname unavailable. Try again:");
             io::stdin()
                 .read_line(&mut nick_change)
@@ -80,11 +81,10 @@ fn main() {
             continue;
         } else {
             println!("Nickname accepted. Start chatting!");
+            user_info[0] = nick_change.trim().to_string();
             break;
         }
-
     }
-
     connection_loop(connection, user_info);
 }
 
@@ -108,7 +108,7 @@ fn connection_loop(stream: TcpStream, user: Vec<String>) {
             println!("[GOODBYE]");
             // The last message that any client sends to a server
             // should be of type "disconnection"
-            lib::send_json_packet(&mut stream_reader, object! {kind: "disconnection"}).unwrap();
+            lib::send_json_packet(&mut stream_reader, object! {kind: "disconnection", author: user[0].to_string()}).unwrap();
             break;
         };
 

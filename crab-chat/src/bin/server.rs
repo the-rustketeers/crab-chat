@@ -1,14 +1,13 @@
 use crab_chat as lib;
 use json::{JsonValue, object};
-
 use std::{
     net::{TcpListener, TcpStream},
     process,
     sync::mpsc::{self, Receiver, TryRecvError},
     thread,
+    fs::{self, OpenOptions},
+    io::Write,
 };
-
-static mut NICKS: Vec<String> = vec![];
 
 const ERR: i32 = -1;
 
@@ -16,11 +15,19 @@ const ERR: i32 = -1;
  * Main program. Hosts the Chat Server
  */
 fn main() {
-    unsafe {
-        let mut starter: Vec<String> = vec![];
-        starter.push("Starter_val".to_string());
-        NICKS = starter.clone();
-    }
+
+    ctrlc::set_handler(move || {
+        println!("Received Ctrl+C!");
+        match fs::remove_file("active_nicks.log") {
+            Ok(()) => (),
+            Err(why) => {
+                println!("Unable to remove active_nicks.log: {}", why);
+            },
+        }
+        process::exit(0);
+    })
+    .expect("Error setting Ctrl-C handler.");
+
     //set up TcpListener, bind to port, and listen for connections
     let listener: TcpListener = TcpListener::bind(lib::ADDRESS).unwrap_or_else(|why| {
         eprintln!("ERROR: {why}");
@@ -77,8 +84,8 @@ fn main() {
  * and will forward any messages it receives through the channel
  */
 fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValue>) {
-    let mut name_check = false;
-    let mut temp_nicks: Vec<String> = vec![];
+
+    //let mut temp_nicks: Vec<String> = vec![];
     loop {
         let obj = match lib::receive_json_packet(&mut listener) {
             Ok(obj) => obj,
@@ -88,6 +95,24 @@ fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValu
         lib::log_json_packet(&obj);
 
         if obj["kind"] == "disconnection" {
+            let mut nicks: Vec<String> = fs::read_to_string("active_nicks.log").expect("Failed to read active_nicks.log").split(" ").map(|s| s.to_string()).collect();
+            //let index = nicks.iter().position(|x| *x == obj["author"].to_string());
+            //nicks.remove(index);
+            nicks.retain(|x| *x != obj["author"].to_string());
+            println!("{:?}", nicks);
+            match fs::remove_file("active_nicks.log") {
+                Ok(()) => (),
+                Err(why) => {
+                    println!("Unable to remove active_nicks.log: {}", why);
+                },
+            }
+            let mut file = OpenOptions::new().read(true).append(true).create(true).open("active_nicks.log").unwrap();
+            for index in nicks {
+                let mut name = index.to_string();
+                name.push_str(" ");
+                file.write_all(name.as_bytes()).expect("Write to active_nicks.log failed.");
+            }
+
             println!(
                 "[{:?} DISCONNECTED FROM THE SERVER]",
                 listener.peer_addr().unwrap()
@@ -96,21 +121,20 @@ fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValu
         }
 
         if obj["kind"].to_string() == "nick" {
-            unsafe {
-                for item in NICKS.clone() {
-                    if (obj["author"].to_string() == item.to_string()) && name_check == false {
-                        lib::send_json_packet(&mut listener, object! {kind: "retry"}).unwrap();
-                        continue;
-                    } else {
-                        println!("{:?}", obj["author"].to_string().clone());
-                        temp_nicks.push(obj["author"].clone().to_string());
-                        name_check = true;
-                        NICKS = temp_nicks.clone();
-                        print!("{:?}", temp_nicks);
-                        lib::send_json_packet(&mut listener, object! {kind: "okay"}).unwrap();
-                        continue;
-                    }
-                }
+            let mut file = OpenOptions::new().read(true).append(true).create(true).open("active_nicks.log").unwrap();
+            let nicks: Vec<String> = fs::read_to_string("active_nicks.log").expect("Failed to read active_nicks.log").split(" ").map(|s| s.to_string()).collect();
+                if nicks.iter().any(|e| e==obj["author"].as_str().unwrap()) {
+                lib::send_json_packet(&mut listener, object! {kind: "retry"}).unwrap();
+                println!("Retried!\n");
+                print!("\n{:?}\n", nicks);
+                continue;
+            } else {
+                let mut name = obj["author"].to_string();
+                name.push_str(" ");
+                file.write_all(name.as_bytes()).expect("Write to active_nicks.log failed.");
+                print!("\n{:?}\n", nicks);
+                lib::send_json_packet(&mut listener, object! {kind: "okay"}).unwrap();
+                continue;
             }
         }
 
