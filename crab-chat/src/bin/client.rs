@@ -175,7 +175,8 @@ fn connection_loop(stream: TcpStream, user: Vec<String>) {
             clrval.push("255");
         }
         if obj["kind"] == "server_shutdown" {
-            thread::sleep(Duration::from_millis(10000));
+            thread::sleep(Duration::from_millis(10000)); // Unimplemented shutdown
+            process::exit(0);
         }
         if obj["message"].is_null() {
             continue;
