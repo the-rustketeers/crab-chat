@@ -2,7 +2,7 @@ use chrono::Local;
 use crab_chat as lib;
 use json::object;
 use colored::Colorize;
-use std::{time::Duration, io, net::TcpStream, process, thread};
+use std::{io, net::TcpStream, process, thread};
 
 fn main() {
 
@@ -106,7 +106,13 @@ fn main() {
 
     ctrlc::set_handler(move || {
         println!("Received Ctrl+C!");
-        lib::send_json_packet(&mut handler_connection, object! {kind: "disconnection", author: handler_copy[0].to_string()}).unwrap();
+        match lib::send_json_packet(&mut handler_connection, object! {kind: "disconnection", author: handler_copy[0].to_string()}) {
+            Ok(()) => (),
+            Err(_) => {
+                println!("[GOODBYE]");
+                process::exit(0);
+            }
+        }
         println!("[GOODBYE]");
         process::exit(0);
     })
@@ -175,8 +181,7 @@ fn connection_loop(stream: TcpStream, user: Vec<String>) {
             clrval.push("255");
         }
         if obj["kind"] == "server_shutdown" {
-            thread::sleep(Duration::from_millis(10000)); // Unimplemented shutdown
-            process::exit(0);
+            (); // Server will shutdown in 10 seconds. Client recognizes this.
         }
         if obj["message"].is_null() {
             continue;

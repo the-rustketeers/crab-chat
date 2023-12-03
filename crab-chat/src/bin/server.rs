@@ -9,6 +9,7 @@ use std::{
     fs::{self, OpenOptions},
     io::Write,
 };
+use chrono::Local;
 
 const ERR: i32 = -1;
 
@@ -16,7 +17,6 @@ const ERR: i32 = -1;
  * Main program. Hosts the Chat Server
  */
 fn main() {
-
     let (json_producer, json_consumer) = mpsc::channel::<JsonValue>();
     let (stream_producer, stream_consumer) = mpsc::channel::<TcpStream>();
 
@@ -24,19 +24,30 @@ fn main() {
 
     ctrlc::set_handler(move || {
         println!("Received Ctrl+C!");
-        match handler_producer.send(object! {kind: "server_shutdown", author: "SERVER_HOST", color: "255 255 255"}) {
-            Ok(()) => (),
-            Err(why) => {
-                eprintln!("ERROR: {why}");
-            }
-        }
+
         match fs::remove_file("active_nicks.log") {
             Ok(()) => (),
             Err(why) => {
                 println!("Unable to remove active_nicks.log: {}", why);
             },
         }
-        thread::sleep(Duration::from_millis(10000));
+
+        let local = Local::now().format("%H:%M:%S").to_string();
+        match handler_producer.send(
+        object! {
+        time: local,
+        kind: "server_shutdown",
+        author: "SERVER_HOST",
+        color: "255 255 255",
+        message: "The server will disconnect in 10 seconds..."}) {
+            Ok(()) => (),
+            Err(why) => {
+                eprintln!("ERROR: {why}");
+            }
+        }
+        // 10 second timer until shutdown. Can still send and receive messages.
+        thread::sleep(Duration::from_millis(10000));  
+        
         process::exit(0);
     })
     .expect("Error setting Ctrl-C handler.");
@@ -86,6 +97,7 @@ fn main() {
         }
     }
 
+
     // Ideally should wait until the fetcher thread ends before closing program.
     // Currently this place of code is never reached because the main thread
     // continuously just looks for possible connections
@@ -122,8 +134,10 @@ fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValu
             let mut file = OpenOptions::new().read(true).append(true).create(true).open("active_nicks.log").unwrap();
 
             file.write_all(nicks.join("£").as_bytes()).expect("Wite to active_nicks.log failed.");
-
             drop(file); // drops file from scope, forcing flush
+
+            let mut logfile = OpenOptions::new().read(true).append(true).create(true).open("history.log").unwrap();
+                logfile.write_all(format!("\n{} with nickname \"{}\" has disconnected @ {}\n", listener.peer_addr().unwrap(), obj["author"], Local::now().format("%H:%M:%S").to_string()).as_bytes()).expect("Write to history.log failed.");
 
             println!(
                 "[{:?} DISCONNECTED FROM THE SERVER]",
@@ -146,6 +160,8 @@ fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValu
                 file.write_all(name.as_bytes()).expect("Write to active_nicks.log failed.");
                 print!("\n{:?}\n", nicks);
                 lib::send_json_packet(&mut listener, object! {kind: "okay"}).unwrap();
+                let mut logfile = OpenOptions::new().read(true).append(true).create(true).open("history.log").unwrap();
+                logfile.write_all(format!("\n{} has selected \"{}\" for their nickname @ {}\n", listener.peer_addr().unwrap(), obj["author"], Local::now().format("%H:%M:%S").to_string()).as_bytes()).expect("Write to history.log failed.");
                 continue;
             }
         }
@@ -204,6 +220,8 @@ fn fetch_loop(json_consumer: Receiver<JsonValue>, stream_consumer: Receiver<TcpS
  */
 fn push_to_clients(client_list: &mut Vec<TcpStream>, obj: JsonValue) -> Vec<TcpStream> {
     let mut new_list: Vec<TcpStream> = vec![];
+    let mut logfile = OpenOptions::new().read(true).append(true).create(true).open("history.log").unwrap();
+    logfile.write_all(format!("{}: {} says:\n\t\"{}\"\n",obj["time"], obj["author"], obj["message"]).as_bytes()).expect("Write to history.log failed.");
     for i in 0..client_list.len() {
         match lib::send_json_packet(&mut client_list[i], obj.clone()) {
             Ok(()) => new_list.push(client_list[i].try_clone().unwrap()), // Appends to new list if stream = no error. List is then returned.
