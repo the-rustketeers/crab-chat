@@ -6,6 +6,7 @@ use std::{
 
 pub const ADDRESS: &str = "127.0.0.1:13579";
 pub const EXIT_CODE: &str = "!!";
+pub const ACTIVE_NICKNAME_FILE: &str = "active_nicks.log";
 
 /**
  * Sends a json object through the TcpStream, by first creating the object, sending its size, and then the object.
