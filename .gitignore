@@ -15,3 +15,7 @@ Cargo.lock
 
 # @Ediblelnk Put this here because he uses Obsidian to view markdown documents
 .obsidian
+.vscode/settings.json
+
+# no need to sync log files between machines, if we decide to, just remove this 
+history.log

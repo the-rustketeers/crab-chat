@@ -1,6 +1,6 @@
 [package]
 name = "crab-chat"
-version = "0.1.0"
+version = "0.9.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -8,3 +8,5 @@ edition = "2021"
 [dependencies]
 chrono = { version = "0.4.31", features = ["unstable-locales"] }
 json = "0.12.4"
+colored = "2.0.4"
+ctrlc = "3.4.0"

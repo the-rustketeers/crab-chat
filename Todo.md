@@ -6,14 +6,14 @@
 
 - [x] We need to make the client ask for the user's nickname and their preferred color of text.
 
-- [ ] Print out colored text according to client json requests
+- [x] Print out colored text according to client json requests
 
-- [ ] I would love to have the server output its logs to a file that it creates at the start of the session, which the name could have something to do with the current time.
+- [ ] I would love to have the server output its logs to a file that it creates at the start of the session, which the name could have something to do with the current time. (Sort of done.)
 
-- [ ] The server must be able to gracefully shutdown. If the server receives a CTRL-c to kill it, the server should send a message to all clients indicating it will be shutting down in x seconds, then wait x seconds and gracefully close. This should be done by using a signal handler for the SIGINT signal.
+- [x] The server must be able to gracefully shutdown. If the server receives a CTRL-c to kill it, the server should send a message to all clients indicating it will be shutting down in x seconds, then wait x seconds and gracefully close. This should be done by using a signal handler for the SIGINT signal. (Done! WILL ONLY WORK ON BUILDS! Cargo run interferes with shutdown processes.)
 
 - [ ] Change the server and the client to take command line arguments for the address
 
-- [ ] Update readme file according to the project's specifications
+- [x] Update readme file according to the project's specifications
 
-- [ ] Have a list of nicknames so that the server can approve nickname requests. When a client disconnects, it sends it's nickname so it can be removed from the list of nicknames.
+- [x] Have a list of nicknames so that the server can approve nickname requests. When a client disconnects, it sends it's nickname so it can be removed from the list of nicknames.
