@@ -273,7 +273,8 @@ fn fetch_loop(json_consumer: Receiver<JsonValue>, stream_consumer: Receiver<TcpS
                 TryRecvError::Empty => (),
             },
         };
-        thread::sleep(Duration::from_millis(10));
+       thread::sleep(Duration::from_millis(10));
+
     }
 }
 
