@@ -61,6 +61,10 @@
     - Document support and creations
     - Set up meeting times and coordinated team
 ### Austin Swartley
+    - Designed high level flow of the project
+    - Refined logic throughout the server
+    - Helped find final idea for nickname and stream handling
+    - Doucumented funtions
 
 
 ## Tasks and completion times
