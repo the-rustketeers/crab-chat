@@ -12,11 +12,13 @@ use json::JsonValue;
 use std::{
     io::{Read, Write},
     net::TcpStream,
+    time::Duration,
 };
 
 // pub const ADDRESS: &str = "127.0.0.1:13579"; dead code
 pub const EXIT_CODE: &str = "!!"; // command to be typed to exit from client side program (via command)
 pub const ACTIVE_NICKNAME_FILE: &str = "active_nicks.log";
+pub const SHUTDOWN_TIME: Duration = Duration::from_secs(3);
 
 /// Function name:      send_json_packet
 /// Description:        Sends a JSON packet to the desired stream

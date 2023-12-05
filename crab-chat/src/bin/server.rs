@@ -9,7 +9,7 @@ Filename:       server.rs
 Purpose:        This is the server for a server-client project.
                 This program will collect messages sent by clients
                 and distribute them to all connected client
-                programs. 
+                programs.
 */
 use chrono::Local;
 use crab_chat as lib;
@@ -25,18 +25,17 @@ use std::{
     time::Duration,
 };
 
-// const ERR: i32 = -1; dead code. See line 105 for why.
-
 /// Function name:      main
 /// Description:        Hosts and executes program.
 /// Parameters:         None
 /// Return Value:       None
 fn main() {
-
     let args: Vec<String> = env::args().collect();
     if args.len() != 3 {
-        eprintln!("Please input the correct number of arguments...
-        Usage: ./server [IP ADDRESS] [PORT #]");
+        eprintln!(
+            "Please input the correct number of arguments...
+        Usage: ./server [IP ADDRESS] [PORT #]"
+        );
         process::exit(0);
     }
     let address: String = format!("{}:{}", args[1], args[2]);
@@ -65,14 +64,14 @@ fn main() {
             .open("history.log")
             .unwrap();
         logfile
-                .write_all(
-                    format!(
-                        "\n[SERVER SHUTDOWN @ {}]\n\n",
-                        Local::now().format("%H:%M:%S").to_string()
-                    )
-                    .as_bytes(),
+            .write_all(
+                format!(
+                    "\n[SERVER SHUTDOWN @ {}]\n\n",
+                    Local::now().format("%H:%M:%S").to_string()
                 )
-                .expect("Write to history.log failed.");
+                .as_bytes(),
+            )
+            .expect("Write to history.log failed.");
 
         // send a final message to all clients that the server is shutting down
         let local = Local::now().format("%H:%M:%S").to_string();
@@ -81,7 +80,7 @@ fn main() {
         kind: "server_shutdown",
         author: "SERVER_HOST",
         color: "255 255 255",
-        message: "The server will disconnect in 10 seconds..."})
+        message: "The server will disconnect in 3 seconds..."})
         {
             Ok(()) => (),
             Err(why) => {
@@ -89,7 +88,7 @@ fn main() {
             }
         }
         // 10 second timer until shutdown. Can still send and receive messages.
-        thread::sleep(Duration::from_millis(10000));
+        thread::sleep(lib::SHUTDOWN_TIME);
 
         process::exit(0);
     })
@@ -97,28 +96,27 @@ fn main() {
 
     // Prints to log file when server has started up. Put after handler for understandability.
     let mut logfile = OpenOptions::new()
-            .read(true)
-            .append(true)
-            .create(true)
-            .open("history.log")
-            .unwrap();
+        .read(true)
+        .append(true)
+        .create(true)
+        .open("history.log")
+        .unwrap();
     logfile
-            .write_all(
-                format!(
-                    "\n[SERVER STARTUP @ {}]\n\n",
-                    Local::now().format("%H:%M:%S").to_string()
-                )
-                .as_bytes(),
+        .write_all(
+            format!(
+                "\n[SERVER STARTUP @ {}]\n\n",
+                Local::now().format("%H:%M:%S").to_string()
             )
-            .expect("Write to history.log failed.");
-    drop(logfile);    
+            .as_bytes(),
+        )
+        .expect("Write to history.log failed.");
+    drop(logfile);
 
     //set up TcpListener, bind to port, and listen for connections
     let listener: TcpListener = TcpListener::bind(address).unwrap_or_else(|why| {
         eprintln!("[ERROR: {why}]");
-        process::exit(0); // Removed this value as -1 due to it returning program error.
-    });                        // It is true there is an error, but the program did not crash.
-                               // I feel this could be misinterpretted as us "missing" checking for invalid IP/Port by Schwes.
+        process::exit(0);
+    });
     // Info message
     println!(
         "[SERVER STARTED AND LISTENING FOR CONNECTION ON {:?}]",
@@ -183,7 +181,7 @@ fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValu
             // read the current list of nicknames
             let mut nicks: Vec<String> = fs::read_to_string("active_nicks.log")
                 .expect("Failed to read active_nicks.log")
-                .split("£")
+                .split("\n")
                 .map(|s| s.to_string())
                 .collect();
 
@@ -208,7 +206,7 @@ fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValu
                 .open("active_nicks.log")
                 .unwrap();
 
-            file.write_all(nicks.join("£").as_bytes())
+            file.write_all(nicks.join("\n").as_bytes())
                 .expect("Wite to active_nicks.log failed.");
             drop(file); // drops file from scope, forcing flush
 
@@ -249,7 +247,7 @@ fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValu
                 .unwrap();
             let nicks: Vec<String> = fs::read_to_string("active_nicks.log")
                 .expect("Failed to read active_nicks.log")
-                .split("£")
+                .split("\n")
                 .map(|s| s.to_string())
                 .collect();
 
@@ -262,7 +260,7 @@ fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValu
             } else {
                 // the client's nickname is unique
                 let mut name = obj["author"].to_string();
-                name.push_str("£");
+                name.push_str("\n");
                 file.write_all(name.as_bytes())
                     .expect("Write to active_nicks.log failed.");
                 print!("\n{:?}\n", nicks);
@@ -333,8 +331,7 @@ fn fetch_loop(json_consumer: Receiver<JsonValue>, stream_consumer: Receiver<TcpS
                 TryRecvError::Empty => (),
             },
         };
-       thread::sleep(Duration::from_millis(10)); // To limit CPU usage based on time
-
+        thread::sleep(Duration::from_millis(10)); // To limit CPU usage based on time
     }
 }
 

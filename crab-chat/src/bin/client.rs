@@ -15,24 +15,19 @@ use chrono::Local;
 use colored::Colorize;
 use crab_chat as lib;
 use json::object;
-use std::{
-    env,
-    io,
-    net::TcpStream,
-    process,
-    thread,
-};
+use std::{env, io, net::TcpStream, process, thread};
 
 /// Function name:      main
 /// Description:        Hosts and executes program. Also checks for active nicknames from server.
 /// Parameters:         None
 /// Return Value:       None
 fn main() {
-
     let args: Vec<String> = env::args().collect();
     if args.len() != 3 {
-        eprintln!("Please input the correct number of arguments...
-        Usage: ./client [IP ADDRESS OF SERVER] [PORT # OF SERVER]");
+        eprintln!(
+            "Please input the correct number of arguments...
+        Usage: ./client [IP ADDRESS OF SERVER] [PORT # OF SERVER]"
+        );
         process::exit(0);
     }
     let address: String = format!("{}:{}", args[1], args[2]);
@@ -139,20 +134,14 @@ fn main() {
     // If someone ctrl+C's the program, commence graceful shutdown.
     ctrlc::set_handler(move || {
         println!("Received Ctrl+C!");
-        match lib::send_json_packet(
+        let _ = lib::send_json_packet(
             &mut handler_connection,
             object! {kind: "disconnection", author: handler_copy[0].to_string()},
-        ) {
-            Ok(()) => (),
-            Err(_) => {
-                println!("[GOODBYE]");
-                process::exit(0);
-            }
-        }
+        );
         println!("[GOODBYE]");
         process::exit(0);
     })
-    .expect("Error setting Ctrl-C handler.");
+    .expect("[Error setting Ctrl-C handler]");
 
     connection_loop(connection, user_info.clone());
 }
@@ -227,7 +216,8 @@ fn connection_loop(stream: TcpStream, user: Vec<String>) {
             clrval.push("255");
         }
         if obj["kind"] == "server_shutdown" {
-            (); // Server will shutdown in 10 seconds. Client recognizes this.
+            // Server will shutdown in 10 seconds. Client recognizes this.
+            ();
         }
         if obj["message"].is_null() {
             continue;
