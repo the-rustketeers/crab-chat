@@ -2,12 +2,27 @@ use chrono::Local;
 use colored::Colorize;
 use crab_chat as lib;
 use json::object;
-use std::{io, net::TcpStream, process, thread};
+use std::{
+    env,
+    io,
+    net::TcpStream,
+    process,
+    thread,
+};
 
 fn main() {
-    let connection: TcpStream = TcpStream::connect(lib::ADDRESS).unwrap_or_else(|e| {
+
+    let args: Vec<String> = env::args().collect();
+    if args.len() != 3 {
+        eprintln!("Please input the correct number of arguments...
+        Usage: ./client [IP ADDRESS OF SERVER] [PORT # OF SERVER]");
+        process::exit(0);
+    }
+    let address: String = format!("{}:{}", args[1], args[2]);
+
+    let connection: TcpStream = TcpStream::connect(address).unwrap_or_else(|e| {
         eprintln!("Error: {e}.");
-        process::exit(1);
+        process::exit(0);
     });
 
     let mut user_info: Vec<String> = vec![]; // Vector that contains user information. [0] is name, [1], [2], and [3] are R, G, and B, respectively for name color

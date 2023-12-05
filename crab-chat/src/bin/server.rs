@@ -2,6 +2,7 @@ use chrono::Local;
 use crab_chat as lib;
 use json::{object, JsonValue};
 use std::{
+    env,
     fs::{self, OpenOptions},
     io::Write,
     net::{TcpListener, TcpStream},
@@ -11,12 +12,21 @@ use std::{
     time::Duration,
 };
 
-const ERR: i32 = -1;
+// const ERR: i32 = -1; dead code. See line 105 for why.
 
 /**
  * Main program. Hosts the Chat Server
  */
 fn main() {
+
+    let args: Vec<String> = env::args().collect();
+    if args.len() != 3 {
+        eprintln!("Please input the correct number of arguments...
+        Usage: ./server [IP ADDRESS] [PORT #]");
+        process::exit(0);
+    }
+    let address: String = format!("{}:{}", args[1], args[2]);
+
     let (json_producer, json_consumer) = mpsc::channel::<JsonValue>();
     let (stream_producer, stream_consumer) = mpsc::channel::<TcpStream>();
 
@@ -33,6 +43,22 @@ fn main() {
                 println!("[ERROR: Unable to remove active_nicks.log: {}]", why);
             }
         }
+
+        let mut logfile = OpenOptions::new()
+            .read(true)
+            .append(true)
+            .create(true)
+            .open("history.log")
+            .unwrap();
+        logfile
+                .write_all(
+                    format!(
+                        "\n[SERVER SHUTDOWN @ {}]\n\n",
+                        Local::now().format("%H:%M:%S").to_string()
+                    )
+                    .as_bytes(),
+                )
+                .expect("Write to history.log failed.");
 
         // send a final message to all clients that the server is shutting down
         let local = Local::now().format("%H:%M:%S").to_string();
@@ -55,12 +81,30 @@ fn main() {
     })
     .expect("[Error setting Ctrl-C handler]");
 
-    //set up TcpListener, bind to port, and listen for connections
-    let listener: TcpListener = TcpListener::bind(lib::ADDRESS).unwrap_or_else(|why| {
-        eprintln!("[ERROR: {why}]");
-        process::exit(ERR);
-    });
+    // Prints to log file when server has started up. Put after handler for understandability.
+    let mut logfile = OpenOptions::new()
+            .read(true)
+            .append(true)
+            .create(true)
+            .open("history.log")
+            .unwrap();
+    logfile
+            .write_all(
+                format!(
+                    "\n[SERVER STARTUP @ {}]\n\n",
+                    Local::now().format("%H:%M:%S").to_string()
+                )
+                .as_bytes(),
+            )
+            .expect("Write to history.log failed.");
+    drop(logfile);    
 
+    //set up TcpListener, bind to port, and listen for connections
+    let listener: TcpListener = TcpListener::bind(address).unwrap_or_else(|why| {
+        eprintln!("[ERROR: {why}]");
+        process::exit(0); // Removed this value as -1 due to it returning program error.
+    });                        // It is true there is an error, but the program did not crash.
+                               // I feel this could be misinterpretted as us "missing" checking for invalid IP/Port by Schwes.
     // Info message
     println!(
         "[SERVER STARTED AND LISTENING FOR CONNECTION ON {:?}]",
@@ -217,7 +261,7 @@ fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValu
                 logfile
                     .write_all(
                         format!(
-                            "\n{} has selected \"{}\" for their nickname @ {}\n",
+                            "\n{} has selected \"{}\" for their nickname @ {}\n\n",
                             listener.peer_addr().unwrap(),
                             obj["author"],
                             Local::now().format("%H:%M:%S").to_string()
