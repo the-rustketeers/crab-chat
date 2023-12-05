@@ -17,3 +17,5 @@
 - [x] Update readme file according to the project's specifications
 
 - [x] Have a list of nicknames so that the server can approve nickname requests. When a client disconnects, it sends it's nickname so it can be removed from the list of nicknames.
+
+- [ ] Have a `format_JSON_packet()` function that returns a string to reduce code duplication
