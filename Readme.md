@@ -203,6 +203,10 @@ JSON Object Makeup:
   - We had come across an issue where we could not hold active nicknames throughout all of our threads, also due to the complexity of the overall program at this point.
   - We initially tried to use a global struct that was able to hold the TcpStream as well as the nickname per client. This idea had issues due to rust's lifetime errors per thread, and was never able to be fully implemented.
   - After team discussion (and approval), we had decided to implement a system where the names are written down to a .log file, labelled "active_nicks.log", and read/written from there as a sort of multi-accessible variable for all threads.
+- Minor issue: SIGINT handling
+  - We had come across and issue where we were not able to properly wait 10 seconds to handle SIGINT in the server-side of the program.
+  - After research, it would appear the 'cargo run' command built into rust runs the program through an emulator.
+  - The solution ended up to run the built product instead of through the emulator, which overrided the SIGINT sent through the terminal.
 
 ## Status
 
@@ -211,8 +215,4 @@ JSON Object Makeup:
   - Has fully implemented things expected in scope.
 - server.rs
   - Works as expected, with no errors whatsoever.
-  - Has mostly implemented things expected in scope.
-    - Is missing server shutdown timer. Not sure if able to implement.
-
-(Not sure what else to add for "status", but there is possibly more.
-Subject to updates and changes as the project further develops.)
+  - Has fully implemented things expected in scope.

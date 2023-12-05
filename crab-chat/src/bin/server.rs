@@ -1,3 +1,16 @@
+/*
+Authors:        Peter Schaefer, Evan Binkley, and Austin Swartley
+Creation Date:  11/21-12/5
+Due Date:       12/14/23 @ 10:00am
+Course:         CsC328-020
+Professor name: Dr. Schwesinger
+Assignment:     Final Project
+Filename:       server.rs
+Purpose:        This is the server for a server-client project.
+                This program will collect messages sent by clients
+                and distribute them to all connected client
+                programs. 
+*/
 use chrono::Local;
 use crab_chat as lib;
 use json::{object, JsonValue};
@@ -14,9 +27,10 @@ use std::{
 
 // const ERR: i32 = -1; dead code. See line 105 for why.
 
-/**
- * Main program. Hosts the Chat Server
- */
+/// Function name:      main
+/// Description:        Hosts and executes program.
+/// Parameters:         None
+/// Return Value:       None
 fn main() {
 
     let args: Vec<String> = env::args().collect();
@@ -151,10 +165,11 @@ fn main() {
     fetcher.join().unwrap();
 }
 
-/**
- * This function takes a TcpStream and Producer part of a channel
- * and will forward any messages it receives through the channel
- */
+/// Function name:      connection_loop
+/// Description:        Takes a TcpStream and JSON channel producer, and forwards messages it receives through the channel.
+/// Parameters:         mut listener: TcpStream | Actively connected client stream
+///                     json_producer: mpsc::Sender<JsonValue> | Producer end of channel to be able to send to thread to handle incoming messages
+/// Return Value:       None
 fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValue>) {
     loop {
         let obj = match lib::receive_json_packet(&mut listener) {
@@ -283,10 +298,11 @@ fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValu
     }
 }
 
-/**
- * Takes any messages that the json consumer gets and forwards it to all client
- * streams currently seen as connected
- */
+/// Function name:      fetch_loop
+/// Description:        Takes messages from JSON consumer channel end and forwards message to all active clients
+/// Parameters:         json_consumer: Receiver<JsonValue> | JSON consumer end of channel, to grab and send messages received from clients
+///                     stream_consumer: Receiver<TcpStream> | stream consumer end of channel, to grab and store active clients
+/// Return Value:       None
 fn fetch_loop(json_consumer: Receiver<JsonValue>, stream_consumer: Receiver<TcpStream>) {
     // This holds all of the client streams to try to send to
     // As more clients connect this grows and shrinks
@@ -317,15 +333,16 @@ fn fetch_loop(json_consumer: Receiver<JsonValue>, stream_consumer: Receiver<TcpS
                 TryRecvError::Empty => (),
             },
         };
-       thread::sleep(Duration::from_millis(10));
+       thread::sleep(Duration::from_millis(10)); // To limit CPU usage based on time
 
     }
 }
 
-/**
- * This function just loops through all clients in the client list and attempts
- * to send a json packet to them.
- */
+/// Function name:      push_to_clients
+/// Description:        Loops through all active clients in a given list and attempts to send a packet to each
+/// Parameters:         client_list: &mut Vec<TcpStream> | List of clients to loop through and send packets to
+///                     obj: JsonValue | JSON object to be sent to active clients
+/// Return Value:       revised_client_list: Vec<TcpStream> | The edited list of clients, as if to change list upon client disconnection
 fn push_to_clients(client_list: &mut Vec<TcpStream>, obj: JsonValue) -> Vec<TcpStream> {
     let mut revised_client_list: Vec<TcpStream> = vec![];
     let mut logfile = OpenOptions::new()

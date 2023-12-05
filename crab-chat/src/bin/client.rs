@@ -1,3 +1,16 @@
+/*
+Authors:        Peter Schaefer, Evan Binkley, and Austin Swartley
+Creation Date:  11/21-12/5
+Due Date:       12/14/23 @ 10:00am
+Course:         CsC328-020
+Professor name: Dr. Schwesinger
+Assignment:     Final Project
+Filename:       client.rs
+Purpose:        This is the client for a server-client project.
+                This program will receive messages from the server,
+                print them out, as well as allow the user to send messages
+                after selecting a nickname and color of nickname.
+*/
 use chrono::Local;
 use colored::Colorize;
 use crab_chat as lib;
@@ -10,6 +23,10 @@ use std::{
     thread,
 };
 
+/// Function name:      main
+/// Description:        Hosts and executes program. Also checks for active nicknames from server.
+/// Parameters:         None
+/// Return Value:       None
 fn main() {
 
     let args: Vec<String> = env::args().collect();
@@ -140,6 +157,11 @@ fn main() {
     connection_loop(connection, user_info.clone());
 }
 
+/// Function name:      connection_loop
+/// Description:        Takes a TcpStream object and a vector of strings containing user information to send packets to server
+/// Parameters:         stream: TcpStream | TcpStream for address of connected server
+///                     user: Vec<String> | Vector of strings containing relevant user information
+/// Return Value:       None
 fn connection_loop(stream: TcpStream, user: Vec<String>) {
     println!("[START TYPING AND HIT ENTER TO SEND A MESSAGE]");
 

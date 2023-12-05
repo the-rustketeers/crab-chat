@@ -1,17 +1,28 @@
+/*
+Authors:        Peter Schaefer, Evan Binkley, and Austin Swartley
+Creation Date:  11/21-12/5
+Due Date:       12/14/23 @ 10:00am
+Course:         CsC328-020
+Professor name: Dr. Schwesinger
+Assignment:     Final Project
+Filename:       lib.rs
+Purpose:        This is the library for shared code between the client and server programs.
+*/
 use json::JsonValue;
 use std::{
     io::{Read, Write},
     net::TcpStream,
 };
 
-pub const ADDRESS: &str = "127.0.0.1:13579";
-pub const EXIT_CODE: &str = "!!";
+// pub const ADDRESS: &str = "127.0.0.1:13579"; dead code
+pub const EXIT_CODE: &str = "!!"; // command to be typed to exit from client side program (via command)
 pub const ACTIVE_NICKNAME_FILE: &str = "active_nicks.log";
 
-/**
- * Sends a json object through the TcpStream, by first creating the object, sending its size, and then the object.
- * NEW: this now returns a result, so it can be better handled in context
- */
+/// Function name:      send_json_packet
+/// Description:        Sends a JSON packet to the desired stream
+/// Parameters:         s: &mut TcpStream | The stream to send the JSON packet to
+///                     obj: JsonValue | The JSON packet to be sent
+/// Return Value:       Result<(), JsonError> | An Ok()/Err() result to determine the function's success in use cases
 pub fn send_json_packet(s: &mut TcpStream, obj: JsonValue) -> Result<(), JsonError> {
     let strung = obj.dump();
     // println!("Sent Packet: {}", strung);
@@ -29,10 +40,10 @@ pub fn send_json_packet(s: &mut TcpStream, obj: JsonValue) -> Result<(), JsonErr
     Ok(())
 }
 
-/**
- * Receives a packet through the TcpStream, by first reading the size of the json packet, then reading the packet, then finally parsing the json packet.
- * NEW: this now returns a result, so it can be better handled in context
- */
+/// Function name:      receive_json_packet   
+/// Description:        Receives a packet through the given TcpStream, reading size, then content, and finally parsing the packet itself
+/// Parameters:         s: &mut TcpStream | The stream to receive a packet from
+/// Return Value:       Result<JsonValue, JsonError> | An Ok()/Err() result to determine the function's success, and upon success, return the JSON object retrieved.
 pub fn receive_json_packet(s: &mut TcpStream) -> Result<JsonValue, JsonError> {
     let mut packet_size_buf: [u8; 8] = [0; 8];
     match s.read_exact(&mut packet_size_buf) {
@@ -55,10 +66,15 @@ pub fn receive_json_packet(s: &mut TcpStream) -> Result<JsonValue, JsonError> {
 }
 
 #[derive(Debug)]
+///Type JsonError for error types
 pub enum JsonError {
     ConnectionAborted,
 }
 
+/// Function name:      log_json_packet
+/// Description:        To simply print the given JSON object, for logging purposes and debug server-side
+/// Parameters:         obj: &JsonValue | The JSON object to be printed
+/// Return Value:       None
 pub fn log_json_packet(obj: &JsonValue) {
     println!("{:?}", obj);
 }
