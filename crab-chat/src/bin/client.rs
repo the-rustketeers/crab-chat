@@ -58,7 +58,7 @@ fn main() {
         .read_line(&mut user_input)
         .expect("Could not read user input");
 
-    let temp = user_input.split(" "); // Temp value to hold split info with an interator
+    let temp = user_input.split(" "); // Temp value to hold split info with an iterator
 
     // parse the input for the color of username
     let mut iter: i8 = 0;

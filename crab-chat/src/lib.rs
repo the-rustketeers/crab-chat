@@ -10,6 +10,7 @@ Purpose:        This is the library for shared code between the client and serve
 */
 use json::JsonValue;
 use std::{
+    fs::OpenOptions,
     io::{Read, Write},
     net::TcpStream,
     time::Duration,
@@ -79,4 +80,24 @@ pub enum JsonError {
 /// Return Value:       None
 pub fn log_json_packet(obj: &JsonValue) {
     println!("{:?}", obj);
+}
+
+pub fn stringify_json_packet(obj: &JsonValue) -> String {
+    format!(
+        "{}: {} says:\n\t\"{}\"\n",
+        obj["time"], obj["author"], obj["message"]
+    )
+}
+
+pub fn log_to_file(data: &String, filename: &'static str) {
+    OpenOptions::new()
+        .read(true)
+        .append(true)
+        .create(true)
+        .open(filename)
+        .unwrap()
+        .write_all(data.as_bytes())
+        .unwrap_or_else(|_| {
+            eprintln!("[ERROR: Write to '{}' failed]", filename);
+        });
 }

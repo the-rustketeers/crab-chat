@@ -57,21 +57,13 @@ fn main() {
             }
         }
 
-        let mut logfile = OpenOptions::new()
-            .read(true)
-            .append(true)
-            .create(true)
-            .open("history.log")
-            .unwrap();
-        logfile
-            .write_all(
-                format!(
-                    "\n[SERVER SHUTDOWN @ {}]\n\n",
-                    Local::now().format("%H:%M:%S").to_string()
-                )
-                .as_bytes(),
-            )
-            .expect("Write to history.log failed.");
+        lib::log_to_file(
+            &format!(
+                "\n[SERVER SHUTDOWN @ {}]\n\n",
+                Local::now().format("%H:%M:%S").to_string()
+            ),
+            "history.log",
+        );
 
         // send a final message to all clients that the server is shutting down
         let local = Local::now().format("%H:%M:%S").to_string();
@@ -94,23 +86,14 @@ fn main() {
     })
     .expect("[Error setting Ctrl-C handler]");
 
-    // Prints to log file when server has started up. Put after handler for understandability.
-    let mut logfile = OpenOptions::new()
-        .read(true)
-        .append(true)
-        .create(true)
-        .open("history.log")
-        .unwrap();
-    logfile
-        .write_all(
-            format!(
-                "\n[SERVER STARTUP @ {}]\n\n",
-                Local::now().format("%H:%M:%S").to_string()
-            )
-            .as_bytes(),
-        )
-        .expect("Write to history.log failed.");
-    drop(logfile);
+    // Prints to log file when server has started up.
+    lib::log_to_file(
+        &format!(
+            "\n[SERVER STARTUP @ {}]\n\n",
+            Local::now().format("%H:%M:%S").to_string()
+        ),
+        "history.log",
+    );
 
     //set up TcpListener, bind to port, and listen for connections
     let listener: TcpListener = TcpListener::bind(address).unwrap_or_else(|why| {
@@ -175,7 +158,7 @@ fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValu
             Err(lib::JsonError::ConnectionAborted) => break,
         };
 
-        lib::log_json_packet(&obj);
+        // lib::log_json_packet(&obj);
 
         if obj["kind"] == "disconnection" {
             // read the current list of nicknames
@@ -199,35 +182,18 @@ fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValu
             }
 
             // recreate nickname file
-            let mut file = OpenOptions::new()
-                .read(true)
-                .append(true)
-                .create(true)
-                .open("active_nicks.log")
-                .unwrap();
-
-            file.write_all(nicks.join("\n").as_bytes())
-                .expect("Wite to active_nicks.log failed.");
-            drop(file); // drops file from scope, forcing flush
+            lib::log_to_file(&nicks.join("\n"), "active_nicks.log");
 
             // open the logfile and log the disconnection
-            let mut logfile = OpenOptions::new()
-                .read(true)
-                .append(true)
-                .create(true)
-                .open("history.log")
-                .unwrap();
-            logfile
-                .write_all(
-                    format!(
-                        "\n{} with nickname \"{}\" has disconnected @ {}\n",
-                        listener.peer_addr().unwrap(),
-                        obj["author"],
-                        Local::now().format("%H:%M:%S").to_string()
-                    )
-                    .as_bytes(),
-                )
-                .expect("Write to history.log failed.");
+            lib::log_to_file(
+                &format!(
+                    "\n{} with nickname \"{}\" has disconnected @ {}\n",
+                    listener.peer_addr().unwrap(),
+                    obj["author"],
+                    Local::now().format("%H:%M:%S").to_string()
+                ),
+                "history.log",
+            );
 
             println!(
                 "[{:?} DISCONNECTED FROM THE SERVER]",
@@ -264,24 +230,18 @@ fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValu
                 file.write_all(name.as_bytes())
                     .expect("Write to active_nicks.log failed.");
                 print!("\n{:?}\n", nicks);
+
                 lib::send_json_packet(&mut listener, object! {kind: "okay"}).unwrap();
-                let mut logfile = OpenOptions::new()
-                    .read(true)
-                    .append(true)
-                    .create(true)
-                    .open("history.log")
-                    .unwrap();
-                logfile
-                    .write_all(
-                        format!(
-                            "\n{} has selected \"{}\" for their nickname @ {}\n\n",
-                            listener.peer_addr().unwrap(),
-                            obj["author"],
-                            Local::now().format("%H:%M:%S").to_string()
-                        )
-                        .as_bytes(),
-                    )
-                    .expect("[ERROR: Write to 'history.log' failed]");
+
+                lib::log_to_file(
+                    &format!(
+                        "\n{} has selected \"{}\" for their nickname @ {}\n\n",
+                        listener.peer_addr().unwrap(),
+                        obj["author"],
+                        Local::now().format("%H:%M:%S").to_string()
+                    ),
+                    "history.log",
+                );
                 continue;
             }
         }
@@ -342,25 +302,11 @@ fn fetch_loop(json_consumer: Receiver<JsonValue>, stream_consumer: Receiver<TcpS
 /// Return Value:       revised_client_list: Vec<TcpStream> | The edited list of clients, as if to change list upon client disconnection
 fn push_to_clients(client_list: &mut Vec<TcpStream>, obj: JsonValue) -> Vec<TcpStream> {
     let mut revised_client_list: Vec<TcpStream> = vec![];
-    let mut logfile = OpenOptions::new()
-        .read(true)
-        .append(true)
-        .create(true)
-        .open("history.log")
-        .unwrap();
-    logfile
-        .write_all(
-            format!(
-                "{}: {} says:\n\t\"{}\"\n",
-                obj["time"], obj["author"], obj["message"]
-            )
-            .as_bytes(),
-        )
-        .expect("Write to history.log failed.");
+    lib::log_to_file(&lib::stringify_json_packet(&obj), "history.log");
     for i in 0..client_list.len() {
         match lib::send_json_packet(&mut client_list[i], obj.clone()) {
             Ok(()) => revised_client_list.push(client_list[i].try_clone().unwrap()), // Appends to new list if stream = no error. List is then returned.
-            Err(_) => (), // println!("[{:?} HAS BEEN REMOVED FROM THE LIST OF ACTIVE CLIENTS]", client_list[i].peer_addr().unwrap()), // Not needed, helped to make sure
+            Err(_) => (),
         }
     }
     revised_client_list // returned list
