@@ -173,8 +173,8 @@ The builds will be located in the then-created folder named `.../crab-chat/targe
 ## Status
 
 - client.rs
-  - Works as expected, with known errors.
+  - Works as expected, with no known errors.
   - Has fully implemented things expected in scope.
 - server.rs
-  - Works as expected, with known errors.
+  - Works as expected, with no known errors.
   - Has fully implemented things expected in scope.
