@@ -31,14 +31,14 @@ use std::{
 /// Return Value:       None
 fn main() {
     let args: Vec<String> = env::args().collect();
-    if args.len() != 3 {
+    if args.len() != 2 {
         eprintln!(
             "Please input the correct number of arguments...
-        Usage: ./server [IP ADDRESS] [PORT #]"
+        Usage: ./server [PORT #]"
         );
         process::exit(0);
     }
-    let address: String = format!("{}:{}", args[1], args[2]);
+    let address: String = format!("127.0.0.1:{}", args[1]);
 
     let (json_producer, json_consumer) = mpsc::channel::<JsonValue>();
     let (stream_producer, stream_consumer) = mpsc::channel::<TcpStream>();
@@ -52,14 +52,12 @@ fn main() {
         // remove runtime file(s)
         match fs::remove_file("active_nicks.log") {
             Ok(()) => (),
-            Err(why) => {
-                println!("[ERROR: Unable to remove active_nicks.log: {}]", why);
-            }
+            Err(_) => (), // This does not need to print.
         }
 
         lib::log_to_file(
             &format!(
-                "\n[SERVER SHUTDOWN @ {}]\n\n",
+                "\n[SERVER SHUTDOWN @ {}]\n",
                 Local::now().format("%H:%M:%S").to_string()
             ),
             "history.log",
@@ -81,7 +79,7 @@ fn main() {
     // Prints to log file when server has started up.
     lib::log_to_file(
         &format!(
-            "\n[SERVER STARTUP @ {}]\n\n",
+            "\n[SERVER STARTUP @ {}]\n",
             Local::now().format("%H:%M:%S").to_string()
         ),
         "history.log",
@@ -225,7 +223,7 @@ fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValu
 
                 lib::log_to_file(
                     &format!(
-                        "\n{} has selected \"{}\" for their nickname @ {}\n\n",
+                        "\n{} has selected \"{}\" for their nickname @ {}\n",
                         listener.peer_addr().unwrap(),
                         obj["author"],
                         Local::now().format("%H:%M:%S").to_string()
