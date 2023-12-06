@@ -300,6 +300,10 @@ fn push_to_clients(client_list: &mut Vec<TcpStream>, obj: JsonValue) -> Vec<TcpS
     revised_client_list // returned list
 }
 
+/// Function name:      shutdown_json
+/// Description:        Returns a JSON packet after receiving current time, used for shutdown.
+/// Parameters:         local: String | String of current time.
+/// Return Value:       JsonValue | JSON object containing shutdown information
 fn shutdown_json(local: String) -> JsonValue {
     object! {
     time: local,

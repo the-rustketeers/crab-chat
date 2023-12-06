@@ -82,6 +82,10 @@ pub fn log_json_packet(obj: &JsonValue) {
     println!("{:?}", obj);
 }
 
+/// Function name:      stringify_json_packet
+/// Description:        To simply convert JSON object to a string
+/// Parameters:         obj: &JsonValue | The JSON object to be converted to a string
+/// Return Value:       String | The value of the JSON object in string format
 pub fn stringify_json_packet(obj: &JsonValue) -> String {
     format!(
         "{}: {} says:\n\t\"{}\"\n",
@@ -89,6 +93,11 @@ pub fn stringify_json_packet(obj: &JsonValue) -> String {
     )
 }
 
+/// Function name:      log_to_file
+/// Description:        To log the data passed in to a file name also given.
+/// Parameters:         data: &String | The information to be printed to the file
+///                     filename: &'static str | The filename to log the data to
+/// Return Value:       None
 pub fn log_to_file(data: &String, filename: &'static str) {
     OpenOptions::new()
         .read(true)
