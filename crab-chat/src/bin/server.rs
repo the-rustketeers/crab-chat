@@ -66,19 +66,11 @@ fn main() {
         );
 
         // send a final message to all clients that the server is shutting down
-        let local = Local::now().format("%H:%M:%S").to_string();
-        match handler_producer.send(object! {
-        time: local,
-        kind: "server_shutdown",
-        author: "SERVER_HOST",
-        color: "255 255 255",
-        message: "The server will disconnect in 3 seconds..."})
-        {
-            Ok(()) => (),
-            Err(why) => {
-                eprintln!("[ERROR: {why}]");
-            }
-        }
+        handler_producer
+            .send(shutdown_json(Local::now().format("%H:%M:%S").to_string()))
+            .unwrap_or_else(|why| {
+                eprintln!("[ERROR: {why}");
+            });
         // 10 second timer until shutdown. Can still send and receive messages.
         thread::sleep(lib::SHUTDOWN_TIME);
 
@@ -157,8 +149,6 @@ fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValu
             Ok(obj) => obj,
             Err(lib::JsonError::ConnectionAborted) => break,
         };
-
-        // lib::log_json_packet(&obj);
 
         if obj["kind"] == "disconnection" {
             // read the current list of nicknames
@@ -310,4 +300,13 @@ fn push_to_clients(client_list: &mut Vec<TcpStream>, obj: JsonValue) -> Vec<TcpS
         }
     }
     revised_client_list // returned list
+}
+
+fn shutdown_json(local: String) -> JsonValue {
+    object! {
+    time: local,
+    kind: "server_shutdown",
+    author: "SERVER_HOST",
+    color: "255 255 255",
+    message: "The server will disconnect in 3 seconds..."}
 }
