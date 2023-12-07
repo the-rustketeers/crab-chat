@@ -14,6 +14,7 @@ use std::{
     io::{Read, Write},
     net::TcpStream,
     time::Duration,
+    vec,
 };
 
 // pub const ADDRESS: &str = "127.0.0.1:13579"; dead code
@@ -100,4 +101,29 @@ pub fn log_to_file(data: &String, filename: &'static str) {
         .unwrap_or_else(|_| {
             eprintln!("[ERROR: Write to '{}' failed]", filename);
         });
+}
+
+pub fn get_rgb(mut color: String) -> Result<Vec<u8>, GetRgbError> {
+    color = color.trim().to_lowercase();
+
+    match color.as_str() {
+        "red" => Ok(vec![255, 0, 0]),
+        "yellow" => Ok(vec![255, 255, 0]),
+        "green" => Ok(vec![0, 255, 0]),
+        "cyan" => Ok(vec![0, 255, 255]),
+        "blue" => Ok(vec![0, 0, 255]),
+        "magenta" => Ok(vec![255, 0, 255]),
+        "white" => Ok(vec![255, 255, 255]),
+        "black" => Ok(vec![0, 0, 0]),
+        _ => Err(GetRgbError),
+    }
+}
+
+#[derive(Debug)]
+pub struct GetRgbError;
+
+#[derive(Debug, Clone)]
+pub struct UserInfo {
+    pub name: String,
+    pub color: Vec<u8>,
 }
