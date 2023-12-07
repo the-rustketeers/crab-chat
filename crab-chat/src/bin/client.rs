@@ -55,7 +55,7 @@ fn main() {
     user_input = String::new();
 
     // Prompt for and get the user's color choice
-    println!("Please input a color for your name. Options are 'red', 'yellow', 'green', 'cyan', 'blue', 'magenta', 'white', and 'black': ");
+    println!("Please input a color for your name.\nOptions are 'red', 'yellow', 'green', 'cyan', 'blue', 'magenta', 'white', and 'black': ");
     io::stdin()
         .read_line(&mut user_input)
         .expect("Could not read user input");
@@ -129,6 +129,7 @@ fn main() {
 /// Return Value:       None
 fn connection_loop(stream: TcpStream, user: UserInfo) {
     println!("[START TYPING AND HIT ENTER TO SEND A MESSAGE]");
+    println!("[TO EXIT, JUST TYPE '{}' AND HIT ENTER]", lib::EXIT_CODE);
 
     // copy stream and push it into a thread to handle getting input from user
     let mut stream_reader = stream.try_clone().unwrap();

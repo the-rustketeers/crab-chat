@@ -90,6 +90,11 @@ pub fn stringify_json_packet(obj: &JsonValue) -> String {
     )
 }
 
+/// Function name:      log_to_file
+/// Description:        reduces code redundancy and simplifies writing to files
+/// Parameters:         data: &String | The data to be written.
+///                     filename: &'static str | The name of the file written to
+/// Return value:       None
 pub fn log_to_file(data: &String, filename: &'static str) {
     OpenOptions::new()
         .read(true)
@@ -103,6 +108,10 @@ pub fn log_to_file(data: &String, filename: &'static str) {
         });
 }
 
+/// Function name:      get_rgb
+/// Description:        takes a string input and outputs the corresponding RGB value
+/// Parameters:         color: String | The string of a color
+/// Returns:            Result: either a vec![R,G,B] or GetRgbError
 pub fn get_rgb(mut color: String) -> Result<Vec<u8>, GetRgbError> {
     color = color.trim().to_lowercase();
 
@@ -122,6 +131,7 @@ pub fn get_rgb(mut color: String) -> Result<Vec<u8>, GetRgbError> {
 #[derive(Debug)]
 pub struct GetRgbError;
 
+/// Struct containing user information for the client
 #[derive(Debug, Clone)]
 pub struct UserInfo {
     pub name: String,
