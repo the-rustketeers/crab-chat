@@ -217,7 +217,6 @@ fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValu
                 name.push_str("\n");
                 file.write_all(name.as_bytes())
                     .expect("Write to active_nicks.log failed.");
-                print!("\n{:?}\n", nicks);
 
                 lib::send_json_packet(&mut listener, object! {kind: "okay"}).unwrap();
 
