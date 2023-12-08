@@ -137,7 +137,7 @@ Note: Due to the way that 'cargo' operates, signal handling will only operate
 - **Receiving messages**
   - The client has an actively listening thread that will print all messages received.
     - This thread will also check for other types of things, such as:
-      - Not printing empty messages
+      - Not printing messages with no type 'kind' of "message".
       - Other object types (Server disconnect, etc.)
     - This makes the messages a push-based service
 
