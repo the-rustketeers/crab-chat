@@ -21,6 +21,10 @@
     - When the client selects a unique nickname, the client's nickname, IP address, and active timestamp is recorded in a log file.
 - **Sending messages**
   - The user will enter a message through the client, which will then be sent to the server.
+    - The nickname of the client will be in the type 'kind' of "author".
+    - The message data will be in type 'kind' of "message".
+    - Color data will be included in the type 'kind' of "color", formatted in the format above.
+    - Time data will be included in type 'kind' of "time", as formatted above.
   - The user's messages will be recorded to a log file, which includes nickname, timestamp, and message content.
 - **Receiving messages**
   - The client has an actively listening thread that will print all messages received.
