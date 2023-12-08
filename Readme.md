@@ -137,6 +137,8 @@ The builds will be located in the then-created folder named `.../crab-chat/targe
       - Other object types (Server disconnect, etc.)
     - This makes the messages a push-based service
 
+These protocol specs are also found in ProtocolSpecs.md
+
 ## Assumptions
 
 - **User nicknames**

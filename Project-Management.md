@@ -64,7 +64,7 @@ A list of your team members with the project manager identified. Also include pr
 
 ## 8. Application Protocol
 
-- Specifically designed JSON packets (Formatted in previously mentioned manner) in order to convey data sent from client to server, as well as server to client.
+- See Readme.md
 
 ## 9. Sequence Diagram
 
