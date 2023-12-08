@@ -126,7 +126,6 @@ fn main() {
                 });
             }
             Err(/*why*/ _) => (),
-            //eprintln!("[ERROR: {why}]"), // This code is removed as it prints when handling Ctrl+C
         }
     }
 
@@ -158,10 +157,8 @@ fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValu
 
             // remove the disconnected client nickname
             nicks.retain(|x| *x != obj["author"].to_string());
-            println!("{:?}", nicks);
 
             // remove the old nickname file
-            // @Ediblelnk: not exactly sure why this is necessary
             match fs::remove_file("active_nicks.log") {
                 Ok(()) => (),
                 Err(why) => {
@@ -208,8 +205,6 @@ fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValu
             // if the requested nickname is already found in the nickname file tell the client to retry
             if nicks.iter().any(|e| e == obj["author"].as_str().unwrap()) {
                 lib::send_json_packet(&mut listener, object! {kind: "retry"}).unwrap();
-                println!("Retried!\n");
-                print!("\n{:?}\n", nicks);
                 continue;
             } else {
                 // the client's nickname is unique
@@ -222,7 +217,7 @@ fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValu
 
                 lib::log_to_file(
                     &format!(
-                        "\n{} has selected \"{}\" for their nickname @ {}\n",
+                        "\n{} has selected \"{}\" for their nickname @ {}\n\n",
                         listener.peer_addr().unwrap(),
                         obj["author"],
                         Local::now().format("%H:%M:%S").to_string()
