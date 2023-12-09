@@ -15,6 +15,7 @@ use chrono::Local;
 use colored::Colorize;
 use crab_chat as lib;
 use json::object;
+use lib::UserInfo;
 use std::{env, io, net::TcpStream, process, thread};
 
 /// Function name:      main
@@ -37,60 +38,35 @@ fn main() {
         process::exit(0);
     });
 
-    let mut user_info: Vec<String> = vec![]; // Vector that contains user information. [0] is name, [1], [2], and [3] are R, G, and B, respectively for name color
-    let mut user_input: String = String::new();
+    // Struct that contains the user information
+    let mut user_info = UserInfo {
+        name: String::new(),
+        color: vec![],
+    };
 
     // Prompt and format the user's nickname
+    let mut user_input: String = String::new();
     println!("Please input a username:");
     io::stdin()
         .read_line(&mut user_input)
         .expect("Could not read user input");
 
-    user_info.push(user_input.clone().trim().to_string());
+    user_info.name = user_input.trim().to_string();
     user_input = String::new();
 
     // Prompt for and get the user's color choice
-    // POTENTIAL TODO: create a library of colors and just have the user input a color, then the client references which RGB values that corresponds to
-    println!(
-        "Please input an RGB color combination from 0-255 for your name,\n(Example: 255 255 255):"
-    );
+    println!("Please input a color for your name.\nOptions are 'red', 'yellow', 'green', 'cyan', 'blue', 'magenta', 'white', and 'black': ");
     io::stdin()
         .read_line(&mut user_input)
         .expect("Could not read user input");
 
-    let temp = user_input.split(" "); // Temp value to hold split info with an iterator
+    user_info.color = lib::get_rgb(user_input)
+        .expect("Please input proper values when signing in. Shutting down...");
 
-    // parse the input for the color of username
-    let mut iter: i8 = 0;
-    for val in temp {
-        let num_test = val.trim().parse::<i16>();
-        match num_test {
-            Ok(_) => (),
-            Err(_) => {
-                eprintln!("Please input proper values when signing in. Shutting down...");
-                process::exit(0);
-            }
-        }
-
-        if (val.trim().parse::<i16>().unwrap() > 255) || (val.trim().parse::<i16>().unwrap() < 0) {
-            eprintln!("Please input proper values when signing in. Shutting down...");
-            process::exit(0);
-        }
-        user_info.push(val.trim().to_string());
-        iter += 1;
-        if iter > 2 {
-            break;
-        }
-    }
-    if iter != 3 {
-        println!("Please input proper values when signing in. Shutting down...");
-        process::exit(0);
-    }
-
-    let mut nick_change: String = user_info[0].clone();
+    let mut nick_change: String = user_info.name.clone();
     let nick_connection = &mut connection.try_clone().unwrap();
     let mut nick_obj = object! {
-        author: user_info[0].clone(),
+        author: user_info.name.clone(),
         kind: "nick",
     };
 
@@ -123,7 +99,7 @@ fn main() {
             continue;
         } else {
             println!("Nickname accepted. Start chatting!");
-            user_info[0] = nick_change.trim().to_string();
+            user_info.name = nick_change.trim().to_string();
             break;
         }
     }
@@ -136,7 +112,7 @@ fn main() {
         println!("Received Ctrl+C!");
         let _ = lib::send_json_packet(
             &mut handler_connection,
-            object! {kind: "disconnection", author: handler_copy[0].to_string()},
+            object! {kind: "disconnection", author: handler_copy.name.to_string()},
         );
         println!("[GOODBYE]");
         process::exit(0);
@@ -151,8 +127,9 @@ fn main() {
 /// Parameters:         stream: TcpStream | TcpStream for address of connected server
 ///                     user: Vec<String> | Vector of strings containing relevant user information
 /// Return Value:       None
-fn connection_loop(stream: TcpStream, user: Vec<String>) {
+fn connection_loop(stream: TcpStream, user: UserInfo) {
     println!("[START TYPING AND HIT ENTER TO SEND A MESSAGE]");
+    println!("[TO EXIT, JUST TYPE '{}' AND HIT ENTER]", lib::EXIT_CODE);
 
     // copy stream and push it into a thread to handle getting input from user
     let mut stream_reader = stream.try_clone().unwrap();
@@ -173,7 +150,7 @@ fn connection_loop(stream: TcpStream, user: Vec<String>) {
             // should be of type "disconnection"
             lib::send_json_packet(
                 &mut stream_reader,
-                object! {kind: "disconnection", author: user[0].to_string()},
+                object! {kind: "disconnection", author: user.name.to_string()},
             )
             .unwrap();
             break;
@@ -184,10 +161,10 @@ fn connection_loop(stream: TcpStream, user: Vec<String>) {
         // wrap message in a json object
         // currently, all authors are just the address of connection
         let obj = object! {
-            author: format!("{}", user[0]),
+            author: format!("{}", user.name),
             time: local,
             message: msg,
-            color: format!("{} {} {}", user[1], user[2], user[3]),
+            color: format!("{} {} {}", user.color[0], user.color[1], user.color[2]),
         };
 
         // try to send json object, fails if server/client exited already
@@ -206,14 +183,13 @@ fn connection_loop(stream: TcpStream, user: Vec<String>) {
             Ok(obj) => obj,
             Err(_) => break,
         };
-        let mut clrval: Vec<&str> = vec![];
+        let mut color_value: Vec<&str> = vec![];
         if !obj["color"].is_null() {
-            clrval = obj["color"].as_str().unwrap().split(" ").collect();
-            // clrval[0] is R, clrval[1] is G, clrval[2] is B.
+            color_value = obj["color"].as_str().unwrap().split(" ").collect();
         } else {
-            clrval.push("255");
-            clrval.push("255");
-            clrval.push("255");
+            color_value.push("255");
+            color_value.push("255");
+            color_value.push("255");
         }
         if obj["kind"] == "server_shutdown" {
             // Server will shutdown in 10 seconds. Client recognizes this.
@@ -226,9 +202,9 @@ fn connection_loop(stream: TcpStream, user: Vec<String>) {
             "{}: {} says:\n\t\"{}\"",
             obj["time"],
             obj["author"].to_string().truecolor(
-                clrval[0].parse::<u8>().unwrap(),
-                clrval[1].parse::<u8>().unwrap(),
-                clrval[2].parse::<u8>().unwrap()
+                color_value[0].parse::<u8>().unwrap(),
+                color_value[1].parse::<u8>().unwrap(),
+                color_value[2].parse::<u8>().unwrap()
             ),
             obj["message"]
         );
