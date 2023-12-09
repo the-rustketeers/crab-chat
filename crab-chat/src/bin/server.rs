@@ -31,14 +31,14 @@ use std::{
 /// Return Value:       None
 fn main() {
     let args: Vec<String> = env::args().collect();
-    if args.len() != 3 {
+    if args.len() != 2 {
         eprintln!(
             "Please input the correct number of arguments...
-        Usage: ./server [IP ADDRESS] [PORT #]"
+        Usage: ./server [PORT #]"
         );
         process::exit(0);
     }
-    let address: String = format!("{}:{}", args[1], args[2]);
+    let address: String = format!("127.0.0.1:{}", args[1]);
 
     let (json_producer, json_consumer) = mpsc::channel::<JsonValue>();
     let (stream_producer, stream_consumer) = mpsc::channel::<TcpStream>();
@@ -52,14 +52,12 @@ fn main() {
         // remove runtime file(s)
         match fs::remove_file("active_nicks.log") {
             Ok(()) => (),
-            Err(why) => {
-                println!("[ERROR: Unable to remove active_nicks.log: {}]", why);
-            }
+            Err(_) => (), // This does not need to print.
         }
 
         lib::log_to_file(
             &format!(
-                "\n[SERVER SHUTDOWN @ {}]\n\n",
+                "\n[SERVER SHUTDOWN @ {}]\n",
                 Local::now().format("%H:%M:%S").to_string()
             ),
             "history.log",
@@ -81,7 +79,7 @@ fn main() {
     // Prints to log file when server has started up.
     lib::log_to_file(
         &format!(
-            "\n[SERVER STARTUP @ {}]\n\n",
+            "\n[SERVER STARTUP @ {}]\n",
             Local::now().format("%H:%M:%S").to_string()
         ),
         "history.log",
@@ -128,7 +126,6 @@ fn main() {
                 });
             }
             Err(/*why*/ _) => (),
-            //eprintln!("[ERROR: {why}]"), // This code is removed as it prints when handling Ctrl+C
         }
     }
 
@@ -160,10 +157,8 @@ fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValu
 
             // remove the disconnected client nickname
             nicks.retain(|x| *x != obj["author"].to_string());
-            println!("{:?}", nicks);
 
             // remove the old nickname file
-            // @Ediblelnk: not exactly sure why this is necessary
             match fs::remove_file("active_nicks.log") {
                 Ok(()) => (),
                 Err(why) => {
@@ -210,8 +205,6 @@ fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValu
             // if the requested nickname is already found in the nickname file tell the client to retry
             if nicks.iter().any(|e| e == obj["author"].as_str().unwrap()) {
                 lib::send_json_packet(&mut listener, object! {kind: "retry"}).unwrap();
-                println!("Retried!\n");
-                print!("\n{:?}\n", nicks);
                 continue;
             } else {
                 // the client's nickname is unique
@@ -219,7 +212,6 @@ fn connection_loop(mut listener: TcpStream, json_producer: mpsc::Sender<JsonValu
                 name.push_str("\n");
                 file.write_all(name.as_bytes())
                     .expect("Write to active_nicks.log failed.");
-                print!("\n{:?}\n", nicks);
 
                 lib::send_json_packet(&mut listener, object! {kind: "okay"}).unwrap();
 
@@ -302,6 +294,10 @@ fn push_to_clients(client_list: &mut Vec<TcpStream>, obj: JsonValue) -> Vec<TcpS
     revised_client_list // returned list
 }
 
+/// Function name:      shutdown_json
+/// Description:        Returns a JSON packet after receiving current time, used for shutdown.
+/// Parameters:         local: String | String of current time.
+/// Return Value:       JsonValue | JSON object containing shutdown information
 fn shutdown_json(local: String) -> JsonValue {
     object! {
     time: local,

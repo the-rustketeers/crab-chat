@@ -25,6 +25,10 @@ The builds will be located in the then-created folder named `.../crab-chat/targe
   - **Client**: `cargo run --bin client`
   - **Server**: `cargo run --bin server`
 
+Note: Due to the way that 'cargo' operates, signal handling will only operate
+  correctly when building and running the executable file. This is of no 
+  fault to the program.
+
 ## Files/Folders
 
 | File or Folder | Purpose |
@@ -133,9 +137,11 @@ The builds will be located in the then-created folder named `.../crab-chat/targe
 - **Receiving messages**
   - The client has an actively listening thread that will print all messages received.
     - This thread will also check for other types of things, such as:
-      - Not printing empty messages
+      - Not printing messages with no type 'kind' of "message".
       - Other object types (Server disconnect, etc.)
     - This makes the messages a push-based service
+
+These protocol specs are also found in ProtocolSpecs.md
 
 ## Assumptions
 
