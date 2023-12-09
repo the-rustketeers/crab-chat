@@ -284,14 +284,14 @@ fn fetch_loop(json_consumer: Receiver<JsonValue>, stream_consumer: Receiver<TcpS
 /// Return Value:       revised_client_list: Vec<TcpStream> | The edited list of clients, as if to change list upon client disconnection
 fn push_to_clients(client_list: &mut Vec<TcpStream>, obj: JsonValue) -> Vec<TcpStream> {
     let mut revised_client_list: Vec<TcpStream> = vec![];
-    lib::log_to_file(&lib::stringify_json_packet(&obj), "history.log");
+    lib::log_to_file(&lib::stringify_json_packet(&obj, false), "history.log");
     for i in 0..client_list.len() {
         match lib::send_json_packet(&mut client_list[i], obj.clone()) {
             Ok(()) => revised_client_list.push(client_list[i].try_clone().unwrap()), // Appends to new list if stream = no error. List is then returned.
             Err(_) => (),
         }
     }
-    revised_client_list // returned list
+    revised_client_list
 }
 
 /// Function name:      shutdown_json

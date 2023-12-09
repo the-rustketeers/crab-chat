@@ -12,7 +12,6 @@ Purpose:        This is the client for a server-client project.
                 after selecting a nickname and color of nickname.
 */
 use chrono::Local;
-use colored::Colorize;
 use crab_chat as lib;
 use json::object;
 use lib::UserInfo;
@@ -183,14 +182,7 @@ fn connection_loop(stream: TcpStream, user: UserInfo) {
             Ok(obj) => obj,
             Err(_) => break,
         };
-        let mut color_value: Vec<&str> = vec![];
-        if !obj["color"].is_null() {
-            color_value = obj["color"].as_str().unwrap().split(" ").collect();
-        } else {
-            color_value.push("255");
-            color_value.push("255");
-            color_value.push("255");
-        }
+
         if obj["kind"] == "server_shutdown" {
             // Server will shutdown in 10 seconds. Client recognizes this.
             ();
@@ -198,16 +190,7 @@ fn connection_loop(stream: TcpStream, user: UserInfo) {
         if obj["message"].is_null() {
             continue;
         }
-        println!(
-            "{}: {} says:\n\t\"{}\"",
-            obj["time"],
-            obj["author"].to_string().truecolor(
-                color_value[0].parse::<u8>().unwrap(),
-                color_value[1].parse::<u8>().unwrap(),
-                color_value[2].parse::<u8>().unwrap()
-            ),
-            obj["message"]
-        );
+        println!("{}", lib::stringify_json_packet(&obj, true));
     });
 
     // hold until the input reader ends

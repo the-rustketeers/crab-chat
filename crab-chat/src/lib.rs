@@ -8,6 +8,7 @@ Assignment:     Final Project
 Filename:       lib.rs
 Purpose:        This is the library for shared code between the client and server programs.
 */
+use colored::Colorize;
 use json::JsonValue;
 use std::{
     fs::OpenOptions,
@@ -21,6 +22,7 @@ use std::{
 pub const EXIT_CODE: &str = "!!"; // command to be typed to exit from client side program (via command)
 pub const ACTIVE_NICKNAME_FILE: &str = "active_nicks.log";
 pub const SHUTDOWN_TIME: Duration = Duration::from_secs(3);
+pub const USER_NAME_WIDTH: usize = 20;
 
 /// Function name:      send_json_packet
 /// Description:        Sends a JSON packet to the desired stream
@@ -87,11 +89,33 @@ pub fn log_json_packet(obj: &JsonValue) {
 /// Description:        To simply convert JSON object to a string
 /// Parameters:         obj: &JsonValue | The JSON object to be converted to a string
 /// Return Value:       String | The value of the JSON object in string format
-pub fn stringify_json_packet(obj: &JsonValue) -> String {
-    format!(
-        "{}: {} says:\n\t\"{}\"\n",
-        obj["time"], obj["author"], obj["message"]
-    )
+pub fn stringify_json_packet(obj: &JsonValue, true_color: bool) -> String {
+    let mut colors: Vec<&str> = vec![];
+    if !obj["color"].is_null() {
+        colors = obj["color"].as_str().unwrap().split(" ").collect();
+    } else {
+        colors.push("255");
+        colors.push("255");
+        colors.push("255");
+    }
+
+    if true_color {
+        format!(
+            "{}: {:<USER_NAME_WIDTH$} \"{}\"",
+            obj["time"],
+            obj["author"].to_string().truecolor(
+                colors[0].parse::<u8>().unwrap(),
+                colors[1].parse::<u8>().unwrap(),
+                colors[2].parse::<u8>().unwrap()
+            ),
+            obj["message"]
+        )
+    } else {
+        format!(
+            "{}: {:<USER_NAME_WIDTH$} \"{}\"\n",
+            obj["time"], obj["author"], obj["message"]
+        )
+    }
 }
 
 /// Function name:      log_to_file
