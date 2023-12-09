@@ -59,8 +59,13 @@ fn main() {
         .read_line(&mut user_input)
         .expect("Could not read user input");
 
-    user_info.color = lib::get_rgb(user_input)
-        .expect("Please input proper values when signing in. Shutting down...");
+    match lib::get_rgb(user_input) {
+        Ok(rgb) => user_info.color = rgb,
+        Err(why) => {
+            eprintln!("Please input proper values when signing in. Shutting down...: {:?}", why);
+            process::exit(0);
+        },
+    };
 
     let mut nick_change: String = user_info.name.clone();
     let nick_connection = &mut connection.try_clone().unwrap();

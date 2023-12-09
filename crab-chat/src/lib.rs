@@ -101,7 +101,7 @@ pub fn stringify_json_packet(obj: &JsonValue, true_color: bool) -> String {
 
     if true_color {
         format!(
-            "{}: {:<USER_NAME_WIDTH$} \"{}\"",
+            "{}: {:<USER_NAME_WIDTH$} \n        \"{}\"",
             obj["time"],
             obj["author"].to_string().truecolor(
                 colors[0].parse::<u8>().unwrap(),
@@ -112,7 +112,7 @@ pub fn stringify_json_packet(obj: &JsonValue, true_color: bool) -> String {
         )
     } else {
         format!(
-            "{}: {:<USER_NAME_WIDTH$} \"{}\"\n",
+            "{}: {:<USER_NAME_WIDTH$} \n        \"{}\"\n",
             obj["time"], obj["author"], obj["message"]
         )
     }
