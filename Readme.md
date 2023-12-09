@@ -26,7 +26,7 @@ The builds will be located in the then-created folder named `.../crab-chat/targe
   - **Server**: `cargo run --bin server`
 
 Note: Due to the way that 'cargo' operates, signal handling will only operate
-  correctly when building and running the executable file. This is of no 
+  correctly when building and running the executable file. This is of no
   fault to the program.
 
 ## Files/Folders
@@ -148,7 +148,7 @@ These protocol specs are also found in ProtocolSpecs.md
 - **User nicknames**
   - User nicknames are assumed to be able to fit inside of a rust `String`.
   - User nicknames do not contain invalid unicode characters.
-  - User nicknames cannot contain "£".
+  - User nicknames cannot contain the newline character, `\n`.
   - Values should not contain arbitrary, non-printable characters.
 - **Messages**
   - Messages are assumed to be able to fit inside of a rust `String`.

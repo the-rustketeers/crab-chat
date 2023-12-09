@@ -62,7 +62,7 @@ A list of your team members with the project manager identified. Also include pr
 - Server-side
   - Server awaits port number for socket
   - Server processes information and pushes packet based data to clients based on receiving. (Packets received can be UTF-8, but are expected to be ASCII restrained in terms of content)
-  - User can input termination signal for graceful close. 
+  - User can input termination signal for graceful close.
 
 ## 7. List of Shared Functionalities
 

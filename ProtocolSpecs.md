@@ -1,6 +1,6 @@
-## Protocol
+# Protocol
 
-### JSON Packet Makeup
+## JSON Packet Makeup
 
 | Component | Explanation | Type |
 | :-: | :-- | :-- |
@@ -10,7 +10,7 @@
 | '**color**' | Three consecutive numbers in the range `[0, 255]` in a single string, separated by spaces. | Type `String` in rust |
 | '**kind**' | (Optional, sent under specific circumstances) Contains specific packet type, signalling special behaviour by either server or client. | Type `str` in rust |
 
-### JSON Usage Outline
+## JSON Usage Outline
 
 - When client connects, its address is saved to a list of active clients in a scanning thread's memory. This removes the need for a "hello" message to be received.
 - When client disconnects, it will send a JSON object with type 'kind' of "disconnection", signalling it's removal from the active list of clients
