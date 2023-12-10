@@ -10,7 +10,7 @@ A list of your team members with the project manager identified. Also include pr
 
 ## 2. Communication Plan
 
-- Snapchat, discord, and Github
+- Snapchat and Github
 
 ## 3. Tasks
 
