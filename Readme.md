@@ -181,9 +181,7 @@ These protocol specs are also found in ProtocolSpecs.md
 - client.rs
   - Works as expected, with one known issue:
     - The client receives the message it sends.
-      We would like to have the program not echo the user's input.
-      However, we have encountered Rust limitations regarding this.
-      So instead of removing the ability to see text being entered in order to accomplish this, we simply leave the echo'd text in the terminal, and let the client receive the formatted text.
+      We would like to have the program not echo the user's input. However, we have encountered Rust limitations regarding this. So instead of removing the ability to see text being entered in order to accomplish this, we simply leave the echo'd text in the terminal, and let the client receive the formatted text.
   - Has fully implemented things expected in scope.
 - server.rs
   - Works as expected, with no known errors.
