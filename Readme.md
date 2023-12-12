@@ -38,6 +38,8 @@ Note: Due to the way that 'cargo' operates, signal handling will only operate co
 | client.rs | Source code for client program |
 | server.rs | Source code for server program |
 | lib.rs | Source code for shared functionalities between server and client source code |
+| history.log | A file created or appended to upon running the server. Records server events in text format. (File created after program runs, created wherever the program has run from.) |
+| active_nicks.log | A temporary file to store active nicknames server-side. (File created after program runs, and created where the program ran. Deleted after shutdown.) |
 | cargo.toml | File that describes and manages external libraries for 'cargo' service to download and prepare |
 | Project-Management.md | File containing the basic outline and premise of the project |
 | Readme.md | This file, containing the details of the project |
