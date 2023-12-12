@@ -95,6 +95,7 @@ fn main() {
         "[SERVER STARTED AND LISTENING FOR CONNECTION ON {:?}]",
         listener.local_addr().unwrap()
     );
+    println!("[SEND THE CTRL+C SIGNAL TO COMMENCE SERVER SHUTDOWN]");
 
     // Set up mpsc channels to send to thread that handles pushing messages
     //let (json_producer, json_consumer) = mpsc::channel::<JsonValue>();
@@ -125,7 +126,7 @@ fn main() {
                     connection_loop(stream, p);
                 });
             }
-            Err(/*why*/ _) => (),
+            Err(_) => (),
         }
     }
 
@@ -295,7 +296,7 @@ fn push_to_clients(client_list: &mut Vec<TcpStream>, obj: JsonValue) -> Vec<TcpS
 }
 
 /// Function name:      shutdown_json
-/// Description:        Returns a JSON packet after receiving current time, used for shutdown.
+/// Description:        Returns a JSON object after receiving current time, used for shutdown.
 /// Parameters:         local: String | String of current time.
 /// Return Value:       JsonValue | JSON object containing shutdown information
 fn shutdown_json(local: String) -> JsonValue {
