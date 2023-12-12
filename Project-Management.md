@@ -106,7 +106,7 @@ A list of your team members with the project manager identified. Also include pr
 
 ## 9. Sequence Diagram
 
-- See Docs folder, "Visio Program Sequence Diagram"
+- See Docs folder, "Sequence Diagram.pdf" or "Sequence Diagram.vsdx".
 
 ## 10. Test Plan
 

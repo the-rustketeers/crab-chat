@@ -25,9 +25,7 @@ The builds will be located in the then-created folder named `.../crab-chat/targe
   - **Client**: `cargo run --bin client`
   - **Server**: `cargo run --bin server`
 
-Note: Due to the way that 'cargo' operates, signal handling will only operate
-  correctly when building and running the executable file. This is of no
-  fault to the program.
+Note: Due to the way that 'cargo' operates, signal handling will only operate correctly when building and running the executable file. This is of no fault to the program.
 
 ## Files/Folders
 
@@ -42,7 +40,7 @@ Note: Due to the way that 'cargo' operates, signal handling will only operate
 | lib.rs | Source code for shared functionalities between server and client source code |
 | cargo.toml | File that describes and manages external libraries for 'cargo' service to download and prepare |
 | Project-Management.md | File containing the basic outline and premise of the project |
-| Read.md | This file, containing the details of the project |
+| Readme.md | This file, containing the details of the project |
 | Todo.md | File containing list of items that are wanted to be done (Removable) |
 
 ## Responsibilities
@@ -97,6 +95,7 @@ Note: Due to the way that 'cargo' operates, signal handling will only operate
 | :-: | :-- |
 | Set up | < 1 day |
 | Sending and receiving json packets | 1 day |
+| Extracting duplicated code into functions | 3 days |
 
 ## Updated Scope
 
@@ -172,7 +171,7 @@ These protocol specs are also found in ProtocolSpecs.md
   - We initially tried to use a global struct that was able to hold the TcpStream as well as the nickname per client. This idea had issues due to rust's lifetime errors per thread, and was never able to be fully implemented.
   - After team discussion (and approval), we had decided to implement a system where the names are written down to a .log file, labelled "active_nicks.log", and read/written from there as a sort of multi-accessible variable for all threads.
 - **Minor issue: SIGINT handling**
-  - We had come across and issue where we were not able to properly wait 10 seconds to handle SIGINT in the server-side of the program.
+  - We had come across and issue where we were not able to properly wait 3 seconds to handle SIGINT in the server-side of the program.
   - After research, it would appear the 'cargo run' command built into rust runs the program through an emulator.
   - The solution ended up to run the built product instead of through the emulator, which overrode the SIGINT sent through the terminal.
 
@@ -181,7 +180,7 @@ These protocol specs are also found in ProtocolSpecs.md
 - client.rs
   - Works as expected, with one known issue:
     - The client receives the message it sends.
-      We would like to have the program not echo the user's input. However, we have encountered Rust limitations regarding this. So instead of removing the ability to see text being entered in order to accomplish this, we simply leave the echo'd text in the terminal, and let the client receive the formatted text.
+      - We would like to have the program not echo the user's input. However, we have encountered Rust limitations regarding this. So instead of removing the ability to see text being entered in order to accomplish this, we simply leave the echo'd text in the terminal, and let the client receive the formatted text.
   - Has fully implemented things expected in scope.
 - server.rs
   - Works as expected, with no known errors.
