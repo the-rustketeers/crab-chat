@@ -60,7 +60,7 @@ Note: Due to the way that 'cargo' operates, signal handling will only operate
 - Implemented and developed nickname checking server-side
 - Implemented and developed colored names (with help from JSON formatting)
 - Found techniques for managing threads and using channels
-- Setup framework for basic signal handling
+- Set up signal handling
 - Document support and creations
 - Set up meeting times and coordinated team
 
@@ -119,7 +119,7 @@ Note: Due to the way that 'cargo' operates, signal handling will only operate
 | '**author**' | Nickname (previously accepted) of client sending message, in string format. | Type `String` in rust |
 | '**time**' | Time at the packets creation in (Hours:Minutes:Seconds), in string format. | Type `String` in rust |
 | '**message**' | Contents of the message in the form of a string. | Type `str` in rust |
-| '**color**' | Three consecutive numbers in the range `[0, 255]` in a single string, separated by spaces. | Type `String` in rust |
+| '**color**' | Three consecutive integers in the range `[0, 255]` in a single string, separated by spaces. | Type `String` in rust |
 | '**kind**' | (Optional, sent under specific circumstances) Contains specific packet type, signalling special behaviour by either server or client. | Type `str` in rust |
 
 ### JSON Usage Outline
