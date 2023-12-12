@@ -19,7 +19,7 @@ The builds will be located in the then-created folder named `.../crab-chat/targe
 
 - **Build**
   - **Client**: `cargo build --bin client`
-  - **Server**: `cargo run --bin server`
+  - **Server**: `cargo build --bin server`
 
 - **Run**
   - **Client**: `cargo run --bin client`
