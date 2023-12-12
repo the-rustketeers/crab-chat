@@ -15,7 +15,7 @@
 ## Building & Running Client & Server
 
 The following commands must be in directory `.../crab-chat/crab-chat`.
-The builds will be located in the then-created folder named `.../crab-chat/target`.
+The builds will be located in the then-created folder named `.../crab-chat/target/debug`.
 
 - **Build**
   - **Client**: `cargo build --bin client`
