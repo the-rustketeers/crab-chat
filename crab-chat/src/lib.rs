@@ -145,6 +145,7 @@ pub fn get_rgb(mut color: String) -> Result<Vec<u8>, GetRgbError> {
 
     match color.as_str() {
         "red" => Ok(vec![255, 0, 0]),
+        "orange" => Ok(vec![255, 165, 0]),
         "yellow" => Ok(vec![255, 255, 0]),
         "green" => Ok(vec![0, 255, 0]),
         "cyan" => Ok(vec![0, 255, 255]),

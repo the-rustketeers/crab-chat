@@ -54,7 +54,7 @@ fn main() {
     user_input = String::new();
 
     // Prompt for and get the user's color choice
-    println!("Please input a color for your name.\nOptions are 'red', 'yellow', 'green', 'cyan', 'blue', 'magenta', 'white', and 'black': ");
+    println!("Please input a color for your name.\nOptions are 'red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'magenta', 'white', and 'black': ");
     io::stdin()
         .read_line(&mut user_input)
         .expect("Could not read user input");
@@ -62,9 +62,12 @@ fn main() {
     match lib::get_rgb(user_input) {
         Ok(rgb) => user_info.color = rgb,
         Err(why) => {
-            eprintln!("Please input proper values when signing in. Shutting down...: {:?}", why);
+            eprintln!(
+                "Please input proper values when signing in. Shutting down...: {:?}",
+                why
+            );
             process::exit(0);
-        },
+        }
     };
 
     let mut nick_change: String = user_info.name.clone();
@@ -190,7 +193,10 @@ fn connection_loop(stream: TcpStream, user: UserInfo) {
 
         if obj["kind"] == "server_shutdown" {
             // Server will shutdown in 10 seconds. Client recognizes this.
-            ();
+            println!("{}", lib::stringify_json_packet(&obj, true));
+            println!("[GOODBYE]");
+            std::thread::sleep(lib::SHUTDOWN_TIME);
+            process::exit(0);
         }
         if obj["message"].is_null() {
             continue;
