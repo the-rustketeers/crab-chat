@@ -22,8 +22,8 @@ The builds will be located in the then-created folder named `.../crab-chat/targe
   - **Server**: `cargo build --bin server`
 
 - **Run**
-  - **Client**: `cargo run --bin client`
-  - **Server**: `cargo run --bin server`
+  - **Client**: `cargo run --bin client [SERVER IP #] [SERVER PORT #]`
+  - **Server**: `cargo run --bin server [PORT #]`
 
 Note: Due to the way that 'cargo' operates, signal handling will only operate correctly when building and running the executable file. This is of no fault to the program.
 
