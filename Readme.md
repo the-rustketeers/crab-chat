@@ -21,7 +21,7 @@ The builds will be located in the then-created folder named `.../crab-chat/targe
   - **Client**: `cargo build --bin client`
   - **Server**: `cargo build --bin server`
 
-Builds must be run with the same command line arguments that the section below states.
+Builds must be run with the same command line arguments that the 'run' section below states.
 
 - **Run**
   - **Client**: `cargo run --bin client [SERVER IP #] [SERVER PORT #]`
