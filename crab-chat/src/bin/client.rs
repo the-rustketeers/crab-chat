@@ -192,11 +192,13 @@ fn connection_loop(stream: TcpStream, user: UserInfo) {
         };
 
         if obj["kind"] == "server_shutdown" {
-            // Server will shutdown in 10 seconds. Client recognizes this.
+            // Server will shutdown in X seconds. Client recognizes this.
             println!("{}", lib::stringify_json_packet(&obj, true));
-            println!("[GOODBYE]");
-            std::thread::sleep(lib::SHUTDOWN_TIME);
-            process::exit(0);
+            thread::spawn(move || {
+                std::thread::sleep(lib::SHUTDOWN_TIME);
+                process::exit(0);
+            });
+            continue;
         }
         if obj["message"].is_null() {
             continue;
